@@ -1,7 +1,6 @@
 #ifndef _UTILS
 #define _UTILS
 
-#include <math.h>
 #include <dataStructures.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
