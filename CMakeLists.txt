@@ -7,7 +7,7 @@ project(BtB-MCR LANGUAGES CXX VERSION 1.0)
 # # find and include MPI
 # find_package(MPI REQUIRED)
 
-include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+# include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
 # Include directories -------------------------
 include_directories(
@@ -24,6 +24,22 @@ include_directories(
 add_executable(
     BtB-MCR
     src/main.cpp
+)
+
+# add executable for test functions
+
+# include_directories(
+#     PrintC_S PUBLIC
+#     "${PROJECT_SOURCE_DIR}"
+#     "${PROJECT_SOURCE_DIR}/lib"
+#     "${PROJECT_SOURCE_DIR}/lib/stb_image"
+#     "${PROJECT_SOURCE_DIR}/lib/YTA"
+#     "${PROJECT_SOURCE_DIR}/tests"
+# )
+
+add_executable(
+    PrintC_S
+    tests/printSandC.cpp
 )
 
 # Link MPI library

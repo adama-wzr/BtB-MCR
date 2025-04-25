@@ -10,30 +10,6 @@
 
 /*
 
-    Calculating Image Properties
-
-*/
-
-double calc_pore2D(unsigned char* arr, int height, int width)
-{
-    /*
-        Function calc_pore2D:
-        Inputs:
-            - pointer to structure array
-            - height value (number of pixels)
-            - width value (pixels)
-        Outputs:
-            - returns the porosity
-    */
-
-    double porosity = 0;
-
-
-    return porosity;
-}
-
-/*
-
     Initialization
 
 */

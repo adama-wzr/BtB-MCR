@@ -8,6 +8,12 @@ typedef struct
     int height;
     int depth;
     long int nElements;
+    int largestSide;
+    // Include pointers to correlation functions to the struct cuz why not
+    double *S11;
+    double *S01;
+    double *S00;
+    double *C00;
 } meshInfo;
 
 typedef struct
@@ -22,8 +28,10 @@ typedef struct
     int nD;                 // controls number of dimensions
     long int maxIter;       // Cutoff number of iterations
     double minEnergy;       // Cutoff energy
-    int TH;                // Binary threshold
+    int TH;                 // Binary threshold
     int verbose;            // controls printing to command line (1 == true)
+    int blockSize;          // S11 block size
+    int structSize;         // amount of data in a block
 }options;
 
 #endif

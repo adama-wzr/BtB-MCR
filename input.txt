@@ -5,6 +5,7 @@ width: 500
 height: 500
 inputName: CycledMC811_ds.jpg
 outputName: test.jpg
+BlockSize: 100
 RSPM_R: 10
 Iter: 1e8
 Energy: 1e-7

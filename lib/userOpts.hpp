@@ -45,10 +45,13 @@ int printOpts(options *opts)
     
     printf("------------------------------------\n\n");
     printf("            Sim - Options:          \n\n");
+    printf("------------------------------------\n\n");
 
     printf("RSPM Radius: %d\n", opts->RSPM_R);
     printf("Min. Energy: %1.3e\n", opts->minEnergy);
-    printf("Max. Iter %ld\n", opts->maxIter);
+    printf("Max. Iter: %ld\n", opts->maxIter);
+    printf("Block Size: %d\n", opts->blockSize);
+    printf("Struct Size: %d\n", opts->structSize);
 
     return 0;
 }
@@ -83,6 +86,8 @@ void readOpts(options *opts, char *inputTXT)
 
     opts->maxIter = 1e9;
     opts->minEnergy = 1e-6;
+
+    opts->blockSize = 20;
 
     // Allocate memory for reading
     
@@ -141,7 +146,15 @@ void readOpts(options *opts, char *inputTXT)
         {
             opts->TH = (int)tempD;
         }
+        else if (strcmp(tempC, "BlockSize:") == 0)
+        {
+            opts->blockSize = (int)tempD;
+        }
     }
+
+    // update struct size based on block size
+
+    opts->structSize = (opts->blockSize * opts->blockSize / 2) + 1;
 
     InputFile.close();
 
