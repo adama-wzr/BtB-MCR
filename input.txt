@@ -1,0 +1,10 @@
+Example Input File:
+nD: 2
+width: 500
+height: 500
+inputName: 
+outputName: test.jpg
+RSPM_R: 10
+Iter: 1e8
+Energy: 1e-7
+verbose: 1
