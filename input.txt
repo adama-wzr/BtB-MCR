@@ -1,8 +1,9 @@
 Example Input File:
 nD: 2
+TH: 200
 width: 500
 height: 500
-inputName: 
+inputName: CycledMC811_ds.jpg
 outputName: test.jpg
 RSPM_R: 10
 Iter: 1e8

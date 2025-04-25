@@ -14,6 +14,7 @@ include_directories(
     BtB-MCR PUBLIC
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/lib"
+    "${PROJECT_SOURCE_DIR}/lib/stb_image"
     "${PROJECT_SOURCE_DIR}/lib/YTA"
     "${PROJECT_SOURCE_DIR}/tests"
 )
