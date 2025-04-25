@@ -36,6 +36,7 @@ int printOpts(options *opts)
     printf("nD: %d\n", opts->nD);
     printf("Input Name: %s\n", opts->inputName);
     printf("Output Name: %s\n", opts->outputName);
+    printf("Binary Threshold: %d\n", opts->TH);
     printf("Target Width: %d\n", opts->targetWidth);
     printf("Target Height: %d\n", opts->targetHeight);
 
@@ -135,6 +136,10 @@ void readOpts(options *opts, char *inputTXT)
         else if (strcmp(tempC, "Energy:") == 0)
         {
             opts->minEnergy = tempD;
+        }
+        else if (strcmp(tempC, "TH:") == 0)
+        {
+            opts->TH = (int)tempD;
         }
     }
 
