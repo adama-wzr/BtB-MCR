@@ -1,4 +1,3 @@
-#include <mpi/mpi.h>
 #include <YTA.hpp>
 
 int MPI_HelloWorld(int nCores)

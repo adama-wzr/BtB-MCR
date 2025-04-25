@@ -1,9 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
+#include <dataStructures.hpp>
 
-typedef struct
-{
-    int width;
-    int height;
-    int depth;
-} meshInfo;
+

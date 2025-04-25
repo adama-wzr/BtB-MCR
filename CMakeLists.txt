@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 # version information---------------------------------------------------
 project(BtB-MCR LANGUAGES CXX VERSION 1.0)
 
-# find and include MPI
-find_package(MPI REQUIRED)
+# # find and include MPI
+# find_package(MPI REQUIRED)
 
 include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
@@ -26,4 +26,4 @@ add_executable(
 )
 
 # Link MPI library
-target_link_libraries(BtB-MCR ${MPI_C_LIBRARIES})
+# target_link_libraries(BtB-MCR ${MPI_C_LIBRARIES})
