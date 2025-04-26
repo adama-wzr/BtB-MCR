@@ -141,7 +141,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
         {
             int i = row * mesh->width + col;
 
-            if (arr[i] != 1)
+            if (arr[i] == 1)
                 continue;
             
             // arr[i] = 0 for sure
@@ -169,7 +169,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
         {
             int i = row * mesh->width + col;
 
-            if (arr[i] != 1)
+            if (arr[i] == 1)
                 continue;
 
             // arr[i] = 0 for sure
