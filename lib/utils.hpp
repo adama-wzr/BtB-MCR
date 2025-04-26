@@ -7,12 +7,52 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include <time.h>
 
 /*
 
     Initialization
 
 */
+
+void RSPM2D(options *opts, meshInfo *mesh, unsigned char *target_arr, double targetVF)
+{
+    /*
+        Function RSPM2D:
+        Inputs: 
+            - pointer to options
+            - pointer to mesh
+            - poiter to the target array
+            - target VF
+        Output:
+            - none
+        
+        Function will perform the operation for random-sphere packing
+        on the selected domain, while targeting a certain VF.
+    */
+
+    double VF = 0;
+
+    // seed random with time
+    time_t t;
+
+    srand((unsigned ) time(&t));
+
+    // main loop
+
+    while(VF < targetVF)
+    {
+        // randomly draw circle center and radius
+        int radius = rand() % (opts->RSPM_R);
+        int center_i = rand() % (int)(mesh->height);
+        int center_j = rand() % (int)(mesh->width);
+        
+        // Draw the circle
+    }
+
+
+    return;
+}
 
 /*
 
