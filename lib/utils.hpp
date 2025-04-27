@@ -2,6 +2,8 @@
 #define _UTILS
 
 #include <dataStructures.hpp>
+#include <calcFunctions.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -14,6 +16,92 @@
     Initialization
 
 */
+
+void correctVF2D(meshInfo *mesh, unsigned char *target_arr, double targetVF)
+{
+    /*
+        Function correctVF:
+        Inputs: 
+            - pointer to mesh
+            - poiter to the target array
+            - target VF
+        Output:
+            - none
+        
+        Function will correct the VF by adding random pixels.
+    */
+
+    double VF = 1.0 - calc_pore2D(target_arr, mesh->height, mesh->width);
+
+    if (VF > targetVF)
+    {
+        while (VF > targetVF)
+        {
+            int center_i = rand() % (mesh->height);
+            int center_j = rand() % (mesh->width);
+
+            if(target_arr[center_i * mesh->width + center_j] == 1)
+            {
+                target_arr[center_i * mesh->width + center_j] = 0;
+                VF -= 1.0 /mesh->nElements;
+            }
+        }
+    } else if(VF < targetVF)
+    {
+        while (VF < targetVF)
+        {
+            int center_i = rand() % (mesh->height);
+            int center_j = rand() % (mesh->width);
+
+            if(target_arr[center_i * mesh->width + center_j] == 0)
+            {
+                target_arr[center_i * mesh->width + center_j] = 1;
+                VF += 1.0 /mesh->nElements;
+            }
+        }
+    }
+
+
+    return; 
+}
+
+void randomNoise2D(meshInfo *mesh, unsigned char *target_arr, double targetVF)
+{
+    /*
+        Function randomNoise:
+        Inputs: 
+            - pointer to mesh
+            - poiter to the target array
+            - target VF
+        Output:
+            - none
+        
+        Function will pack the domain using random noise to begin with.
+    */
+
+    // get the current volume fraction
+
+    double VF = 1.0 - calc_pore2D(target_arr, mesh->width, mesh->height);
+
+    // seed random number generator
+    time_t t;
+
+    srand((unsigned ) time(&t));
+
+    while (VF < targetVF)
+    {
+        int center_i = rand() % (mesh->height);
+        int center_j = rand() % (mesh->width);
+
+        if(target_arr[center_i*mesh->width + center_j] == 0)
+        {
+            target_arr[center_i * mesh->width + center_j] = 1;
+            VF += 1.0 / mesh->nElements;
+        }
+    }
+
+    return;
+}
 
 void RSPM2D(options *opts, meshInfo *mesh, unsigned char *target_arr, double targetVF)
 {
@@ -48,8 +136,41 @@ void RSPM2D(options *opts, meshInfo *mesh, unsigned char *target_arr, double tar
         int center_j = rand() % (int)(mesh->width);
         
         // Draw the circle
-    }
 
+        for (int row = center_i - radius; row <= center_i + radius; row++)
+        {
+            for(int col = center_j - radius; col <=center_j + radius; col++)
+            {
+                int tempCol = col;
+                int tempRow = row;
+
+                // check wrapping boundaries
+                if (row < 0)
+                {
+                    tempRow = mesh->height + row;
+                }
+                else if(row >= mesh->height)
+                {
+                    tempRow = row - mesh->height;
+                }
+
+                if (col < 0)
+                {
+                    tempCol = mesh->width + col;
+                }
+                else if(col >= mesh->width)
+                {
+                    tempCol = col - mesh->width;
+                }
+
+                if (pow(row - center_i,2) + pow(col - center_j,2) < pow(radius, 2))
+                {
+                    target_arr[tempRow*mesh->width + tempCol] = 1;
+                }
+            }
+        }
+        VF = 1.0 - calc_pore2D(target_arr, mesh->height, mesh->width);
+    }
 
     return;
 }
@@ -102,6 +223,8 @@ int readTarget2D(options *opts, meshInfo *mesh, unsigned char **target_array)
     int nChannels;
 
     *target_array = stbi_load(opts->inputName, &mesh->width, &mesh->height, &nChannels, 1);
+
+    mesh->nElements = mesh->width * mesh->height;
 
     if(nChannels != 1)
         return 1;
