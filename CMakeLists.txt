@@ -42,5 +42,10 @@ add_executable(
     tests/printSandC.cpp
 )
 
+add_executable(
+    testInit
+    tests/testInit.cpp
+)
+
 # Link MPI library
 # target_link_libraries(BtB-MCR ${MPI_C_LIBRARIES})
