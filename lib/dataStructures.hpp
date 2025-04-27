@@ -9,11 +9,14 @@ typedef struct
     int depth;
     long int nElements;
     int largestSide;
-    // Include pointers to correlation functions to the struct cuz why not
+    // Include pointers to correlation functions
     double *S11;
     double *S01;
     double *S00;
     double *C00;
+    // physical descriptors
+    double VF;
+    double porosity;
 } meshInfo;
 
 typedef struct

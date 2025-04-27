@@ -32,7 +32,7 @@ double calc_pore2D(unsigned char* arr, int height, int width)
     double porosity = 0;
     long int count = 0;
 
-    for(int i = 0; i = height*width; i++)
+    for(int i = 0; i < height*width; i++)
     {
         if(arr[i] == 0)
             count++; 
