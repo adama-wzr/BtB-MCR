@@ -14,11 +14,14 @@ typedef struct
     double *S01;
     double *S00;
     double *C00;
+    // Total TP
+    int *TP_Total;
+    long int ChordTotal;
     // Correlation Function Changes
-    double *localTP_b4;
-    double *localTP;
-    double *localChord;
-    double *localChord_b4;
+    int *localTP_b4;
+    int *localTP;
+    int *localChord;
+    int *localChord_b4;
     // physical descriptors
     double VF;
     double porosity;

@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
     
     YTA2D(&opts);
 
+    return 0;
+
     // read image (test)
     
     unsigned char* simTarget;
