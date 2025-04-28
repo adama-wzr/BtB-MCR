@@ -83,6 +83,7 @@ void readOpts(options *opts, char *inputTXT)
     opts->targetDepth = 1;
     opts->nD = 2;
     opts->verbose = 1;
+    opts->lambda = 0.995;
 
     opts->maxIter = 1e9;
     opts->minEnergy = 1e-6;
@@ -149,6 +150,10 @@ void readOpts(options *opts, char *inputTXT)
         else if (strcmp(tempC, "BlockSize:") == 0)
         {
             opts->blockSize = (int)tempD;
+        }
+        else if (strcmp(tempC, "Lambda:") == 0)
+        {
+            opts->lambda = tempD;
         }
     }
 

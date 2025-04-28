@@ -43,6 +43,7 @@ typedef struct
     int verbose;            // controls printing to command line (1 == true)
     int blockSize;          // S11 block size
     int structSize;         // amount of data in a block
+    double lambda;          // cooling rate for Simulated Annealing
 }options;
 
 typedef struct

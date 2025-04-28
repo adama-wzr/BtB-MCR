@@ -10,6 +10,7 @@ int YTA2D(options *opts)
 
     // get struct-size
     opts->structSize = (opts->blockSize * opts->blockSize) / 2 + 1;
+    simInfo.lambda = opts->lambda;
 
     // read target
     unsigned char *targetData;
