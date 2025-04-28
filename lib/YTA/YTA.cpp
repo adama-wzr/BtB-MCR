@@ -163,7 +163,7 @@ int YTA2D(options *opts)
         }
 
         // ensure point two is interface and different from point one
-        while (detectInterface2D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1]) != 1
+        while (detectInterface2D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1]) != 1
                 || recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] ==  recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]])
         {
             // re-draw coordinates until it is an interface
