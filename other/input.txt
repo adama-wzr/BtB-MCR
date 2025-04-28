@@ -3,10 +3,11 @@ nD: 2
 TH: 200
 width: 500
 height: 500
-inputName: CycledMC811_ds.jpg
+inputName: MC811_ds2.jpg
 outputName: test.jpg
 BlockSize: 100
-RSPM_R: 10
-Iter: 1e8
+RSPM_R: 25
+Iter: 1e6
 Energy: 1e-7
+Lambda: 0.9995
 verbose: 1
