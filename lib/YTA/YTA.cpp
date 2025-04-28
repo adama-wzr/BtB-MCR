@@ -1,16 +1,29 @@
 #include <YTA.hpp>
 
-int MPI_HelloWorld(int nCores)
+
+int YTA2D(options *opts)
 {
-    printf("I'm here!\n");
+    // read target
 
-    meshInfo mesh;
+    // get porosity
 
-    mesh.width = 10;
-    mesh.height = 100;
-    mesh.depth = 100;
+    // allocate arrays for reconstruction
 
-    printf("Mesh set!\n");
+    // RSPM
+
+    // calculate initial correlations
+
+    /*
+    
+        Main Loop Below:
+    
+    */
+
+    // if iter != 0 and E_current > E_swap (set e_current = e_swap at i == 0, remove condition)
+
+    
+
+
 
     return 0;
 }

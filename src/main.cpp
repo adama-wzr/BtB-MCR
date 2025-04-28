@@ -21,6 +21,10 @@ int main(int argc, char *argv[])
     if (opts.verbose)
         printOpts(&opts);
     
+    // The only model that currently exists is the YTA
+    
+    YTA2D(&opts);
+
     // read image (test)
     
     unsigned char* simTarget;
