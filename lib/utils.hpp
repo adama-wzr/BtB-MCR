@@ -290,7 +290,7 @@ int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
     else
     {
         S = row + 1;
-        N = row + 1;
+        N = row - 1;
     }
 
     if(recData[S * rec->width + col] != currentPhase || recData[N * rec->width + col] != currentPhase)

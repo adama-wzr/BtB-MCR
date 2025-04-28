@@ -75,6 +75,10 @@ int YTA2D(options *opts)
     // Correct data
     correctVF2D(&rec, recData, target.VF);
 
+    // seed rng
+    time_t t;
+    srand((unsigned ) time(&t));
+
     // calculate initial correlations target
     TP2D(targetData, opts, &target);
     CL2D(targetData, opts, &target);
@@ -132,7 +136,8 @@ int YTA2D(options *opts)
     {
         if(simInfo.iterCount % 10000 == 0)
         {
-            printf("Iter %ld, Swaps %d, Energy %1.3e\n", simInfo.iterCount, simInfo.swapCount, simInfo.Ecurrent);
+            printf("Iter %ld, Swaps %d, Energy %1.3e, pore = %1.3e\n",
+                simInfo.iterCount, simInfo.swapCount, simInfo.Ecurrent, calc_pore2D(recData, rec.height, rec.width));
         }
         // update E-current, if applicable
         if (simInfo.Ecurrent > simInfo.Eswap)
