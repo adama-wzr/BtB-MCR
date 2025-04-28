@@ -161,6 +161,96 @@ int main(int argc, char *argv[])
 
     printf("Rec. VF = %1.3e\n", rec.VF);
 
+    // get block size
+
+    acceptableInput = false;
+    opts.blockSize = 0;
+
+    while(!acceptableInput)
+    {
+        printf("Enter Block Size\n");
+        std::cin >> opts.blockSize;
+        acceptableInput = true;
+        if (opts.blockSize < 1)
+        {
+            printf("Unacceptable input, try again\n");
+            acceptableInput = false;
+        }
+    }
+
+    opts.structSize = (opts.blockSize * opts.blockSize) / 2 + 1;
+
+    // allocate arrays
+    target.largestSide = (target.height > target.width) ? target.height : target.width;
+    rec.largestSide = (rec.height > rec.width) ? rec.height : rec.width;
+
+    target.S11 = (double *)malloc(sizeof(double) * opts.structSize);
+    target.S00 = (double *)malloc(sizeof(double) * opts.structSize);
+    target.S01 = (double *)malloc(sizeof(double) * opts.structSize);
+    target.C00 = (double *)malloc(sizeof(double) * target.largestSide);
+
+    rec.S11 = (double *)malloc(sizeof(double) * opts.structSize);
+    rec.S00 = (double *)malloc(sizeof(double) * opts.structSize);
+    rec.S01 = (double *)malloc(sizeof(double) * opts.structSize);
+    rec.C00 = (double *)malloc(sizeof(double) * rec.largestSide);
+
+    // set memory
+
+    memset(target.S11, 0, sizeof(double) * opts.structSize);
+    memset(target.S01, 0, sizeof(double) * opts.structSize);
+    memset(target.S00, 0, sizeof(double) * opts.structSize);
+    memset(rec.S01   , 0, sizeof(double) * opts.structSize);
+    memset(rec.S11   , 0, sizeof(double) * opts.structSize);
+    memset(rec.S00   , 0, sizeof(double) * opts.structSize);
+
+    memset(target.C00, 0, sizeof(double) * target.largestSide);
+    memset(rec.C00   , 0, sizeof(double) * rec.largestSide);
+
+    // calculate initial correlations
+    printf("Calculating Target Correlations...\n");
+    TP2D(target_data, &opts, &target);
+    CL2D(target_data, &opts, &target);
+
+    printf("Calculating Rec Correlations...\n");
+    TP2D(recData, &opts, &rec);
+    CL2D(recData, &opts, &rec);
+
+    // calculate energy
+    int *total_T = (int *)malloc(sizeof(int) * opts.structSize);
+    int *total_R = (int *)malloc(sizeof(int) * opts.structSize);
+
+    double E_current = 0;
+
+    // 2 point correlation
+    
+    for (int i = 0; i < opts.structSize; i++)
+    {
+        total_T[i] = target.S00[i] + target.S01[i] + target.S11[i];
+        total_R[i] = rec.S00[i] + rec.S01[i] + rec.S11[i];
+        if(target.S11[i] != 0)
+        {
+            E_current += pow((rec.S11[i]/total_R[i] - target.S11[i]/total_T[i]),2);
+        }
+    }
+
+    // Chord-Length
+
+    long int total_chord_T = 0;
+    long int total_chord_R = 0;
+
+    for(int i = 0; i < target.largestSide; i++)
+    {
+        total_chord_R += rec.C00[i];
+        total_chord_T += target.C00[i];
+    }
+
+    for (int i = 0; i < target.largestSide; i++)
+    {
+        E_current += pow((target.C00[i]/total_chord_T - rec.C00[i]/total_chord_R), 2);
+    }
+
+    printf("Current Energy: %1.3e\n", E_current);
+
     // save?
 
     for(int i = 0; i < rec.nElements; i++)

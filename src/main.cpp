@@ -40,13 +40,13 @@ int main(int argc, char *argv[])
             if (simTarget[row*target.width + col] < opts.TH)
                 simTarget[row*target.width + col] = 0;
             else
-                simTarget[row*target.width + col] = 255;
+                simTarget[row*target.width + col] = 1;
         }
     }
 
     // print image
-    printf("Printing Output:\n");
-    writeTarget2D(&opts, &target, simTarget);
+    // printf("Printing Output:\n");
+    // writeTarget2D(&opts, &target, simTarget);
 
     return 0;
 }
