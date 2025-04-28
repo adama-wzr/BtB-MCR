@@ -138,4 +138,141 @@ void YTA_baseAlloc2D(options *opts, sYTA *info, meshInfo *target, meshInfo *rec)
     return;
 }
 
+/*
+
+    Local Correlations
+
+*/
+
+void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag)
+{
+    /*
+        Function localChord
+        Inputs:
+            - pointer to mesh struct
+            - pointer to reconstruction data
+            - row and col of point of interest
+            - swapFlag
+        Outputs:
+            - None
+        
+        Function will calculate the local chord-length functions that are
+        affected by the point (row, col). The chord-length values are stored
+        in the appropriate array according to swapFlag (0 means b4, 1 after).
+    */
+
+    for(int i = 0; i < rec->height; i++)
+    {
+        if(recData[i * rec->width + col] == 1)
+            continue;
+        for(int n = 0; n < rec->height; n++)
+        {
+            if(i + n + 1 == rec->height)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n+1] += 1;
+                else
+                    rec->localChord[n+1] +=1;
+                break;
+            }
+
+            if(recData[(i + n)*rec->width + col] == 1)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n + 1] += 1;
+                else
+                    rec->localChord[n + 1] += 1;
+                i = i + n + 1;
+                break;
+            }
+        }
+    }
+
+    for(int j = 0; j < rec->width; j++)
+    {
+        if(recData[row * rec->width + j] == 1)
+            continue;
+        for(int n = 0; n < rec->width; n++)
+        {
+            if (j + n + 1 == rec->width)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n+1] += 1;
+                else
+                    rec->localChord[n+1] += 1;
+                
+                break;
+            }
+
+            if(recData[row * rec->width + j + n] == 1)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n + 1] += 1;
+                else
+                    rec->localChord[n + 1] += 1;
+                j = j + n + 1;
+                break;
+            }
+        }
+    }
+    return;
+}
+
+void localTP(options *opts, meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag)
+{
+    /*
+        Function localTP:
+        Input:
+            - pointer to options struct
+            - pointer to mesh struct
+            - pointer to reconstruction data
+            - row and col of interest
+            - swapFlag
+        Output:
+            - none.
+        
+        Function will calculate the local two-point correlation at row and col.
+        If the flag is 0, store at rec.tp_b4, if not store at rec.local_tp
+    */
+
+    for(int i = row - opts->blockSize/2; i <= row + opts->blockSize/2; i++)
+    {
+        for(int j = col - opts->blockSize/2; j <= col + opts->blockSize/2; j++)
+        {
+            int tempCol = j;
+            int tempRow = i;
+
+            // periodic boundary in j
+            if (j < 0)
+            {
+                tempCol = rec->width + j;
+            }
+            else if (j > rec->width - 1)
+            {
+                tempCol = j - rec->width;
+            }
+
+            // periodic boundary in i
+            if (i < 0)
+            {
+                tempRow = rec->height + i;
+            }
+            else if (i > rec->height - 1)
+            {
+                tempRow = i - rec->height;
+            }
+            int distance = (int)pow((i - row), 2) + (int)pow((j - col), 2);
+            if(recData[row * rec->width + col] == recData[tempRow * rec->width + tempCol])
+            {
+                if (swapFlag == 0)
+                    rec->localTP_b4[distance] += 1;
+                else
+                    rec->localTP[distance] += 1;
+            }
+        }
+    }
+
+    return;
+}
+
 #endif

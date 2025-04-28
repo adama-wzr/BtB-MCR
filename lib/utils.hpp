@@ -232,4 +232,71 @@ int readTarget2D(options *opts, meshInfo *mesh, unsigned char **target_array)
     return 0;
 }
 
+/*
+
+    Other:
+
+*/
+
+int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
+{
+    /*
+        detectInterface Function:
+        Inputs:
+            - pointer to reconstruction array
+            - pointer to it's data structure
+            - row and col values for the point to check
+        Output:
+            - 0 means not interface, 1 means interface
+
+        Function will check for the four cardinal points for a face interface
+        (no vertex interfaces), and return 1 if interface, 0 if not. 
+    */
+
+    unsigned char currentPhase = recData[row*rec->width + col];
+
+    // check other interfaces
+
+    int tempRow, tempCol;
+    int S, N, E, W;
+
+    if(col == 0)
+    {
+        E = col + 1;
+        W = rec->width - 1;
+    } else if(col == rec->width - 1)
+    {
+        W = col - 1;
+        E = 0;
+    }
+    else
+    {
+        W = col - 1;
+        E = col + 1; 
+    }
+
+    if(recData[row * rec->width + W] != currentPhase || recData[row * rec->width + E] != currentPhase)
+        return 1;
+
+    if (row == 0)
+    {
+        S = row + 1;
+        N = rec->height - 1;
+    } else if (row == rec->height - 1)
+    {
+        S = 0;
+        N = row - 1;
+    }
+    else
+    {
+        S = row + 1;
+        N = row + 1;
+    }
+
+    if(recData[S * rec->width + col] != currentPhase || recData[N * rec->width + col] != currentPhase)
+        return 1;
+
+    return 0;
+}
+
 #endif

@@ -100,8 +100,6 @@ int YTA2D(options *opts)
 
     // Chord-Length
 
-    // Chord-Length
-
     target.ChordTotal = 0;
     rec.ChordTotal = 0;
 
@@ -124,6 +122,166 @@ int YTA2D(options *opts)
     
     */
 
+    simInfo.iterCount = 0;
+    simInfo.swapCount = 0;
+    simInfo.mutCount = 0;
+
+    simInfo.Eswap = simInfo.Ecurrent;
+
+    while (simInfo.iterCount < opts->maxIter && simInfo.Ecurrent > opts->minEnergy)
+    {
+        if(simInfo.iterCount % 10000 == 0)
+        {
+            printf("Iter %ld, Swaps %d, Energy %1.3e\n", simInfo.iterCount, simInfo.swapCount, simInfo.Ecurrent);
+        }
+        // update E-current, if applicable
+        if (simInfo.Ecurrent > simInfo.Eswap)
+        {
+            simInfo.Ecurrent = simInfo.Eswap;
+        }
+
+        // select two points to swap
+
+        simInfo.tempCoord1[0] = rand() % rec.height;
+        simInfo.tempCoord1[1] = rand() % rec.width;
+
+        simInfo.tempCoord2[0] = rand() % rec.height;
+        simInfo.tempCoord2[1] = rand() % rec.width;
+
+        // ensure point one is interface
+
+        while (detectInterface2D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1]) != 1)
+        {
+            // re-draw coordinates until it is an interface
+            simInfo.tempCoord1[0] = rand() % rec.height;
+            simInfo.tempCoord1[1] = rand() % rec.width;
+        }
+
+        // ensure point two is interface and different from point one
+        while (detectInterface2D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1]) != 1
+                || recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] ==  recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]])
+        {
+            // re-draw coordinates until it is an interface
+            simInfo.tempCoord2[0] = rand() % rec.height;
+            simInfo.tempCoord2[1] = rand() % rec.width;
+        }
+
+        // set local correlations to 0
+        memset(rec.localChord, 0, sizeof(int) * rec.largestSide);
+        memset(rec.localChord_b4, 0, sizeof(int) * rec.largestSide);
+        memset(simInfo.chordChange, 0, sizeof(int) * rec.largestSide);
+
+        simInfo.totalChordChange = 0;
+
+        memset(rec.localTP, 0, sizeof(int) * opts->structSize);
+        memset(rec.localTP_b4, 0, sizeof(int) * opts->structSize);
+        memset(simInfo.tpChange, 0, sizeof(int) * opts->structSize);
+
+        // assign a and b
+
+        if(recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] == 0)
+        {
+            simInfo.a[0] = simInfo.tempCoord1[0];
+            simInfo.a[1] = simInfo.tempCoord1[1];
+            simInfo.b[0] = simInfo.tempCoord2[0];
+            simInfo.b[1] = simInfo.tempCoord2[1];
+        }else
+        {
+            simInfo.a[0] = simInfo.tempCoord2[0];
+            simInfo.a[1] = simInfo.tempCoord2[1];
+            simInfo.b[0] = simInfo.tempCoord1[0];
+            simInfo.b[1] = simInfo.tempCoord1[1];
+        }
+
+        // calculate local TP at b
+        localTP(opts, &rec, recData, simInfo.b[0], simInfo.b[1], 0);
+
+        // calculate local CL at a and b
+        localChord(&rec, recData, simInfo.a[0], simInfo.a[1], 0);
+        localChord(&rec, recData, simInfo.b[0], simInfo.b[1], 0);
+
+        // make the swap
+        if (recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] == 0)
+        {
+            recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 1;
+            recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 0;
+        } else
+        {
+            recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 0;
+            recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 1;
+        }
+        
+        // calculate local TP at a
+        localTP(opts, &rec, recData, simInfo.a[0], simInfo.a[1], 1);
+
+        // calculate local CL and a and b
+        localChord(&rec, recData, simInfo.a[0], simInfo.a[1], 1);
+        localChord(&rec, recData, simInfo.b[0], simInfo.b[1], 1);
+
+        // evaluate change in TP
+
+        for (int i = 0; i<opts->structSize; i++){
+            simInfo.tpChange[i] = rec.localTP[i] - rec.localTP_b4[i];
+        }
+
+        // Get change in chord length as well
+
+        for(int i  = 0; i<rec.largestSide; i++){
+            simInfo.chordChange[i] = rec.localChord[i] - rec.localChord_b4[i];
+            simInfo.totalChordChange += rec.localChord[i] - rec.localChord_b4[i];
+        }
+
+        // calculate E_swap
+
+        simInfo.Eswap = 0;
+
+        // S11 contribution
+        for(int i = 0; i < opts->structSize; i++)
+        {
+            if(target.S11[i] == 0)
+                continue;
+            simInfo.Eswap += pow(
+                ((rec.S11[i] + 2*simInfo.tpChange[i])/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]), 2);
+        }
+
+        // CL contribution
+        for(int i = 0; i < target.largestSide; i++)
+        {
+            simInfo.Eswap += pow(
+                ((rec.C00[i]+simInfo.chordChange[i])/(rec.ChordTotal + simInfo.totalChordChange) - target.C00[i]/target.ChordTotal), 2);
+        }
+
+        if (simInfo.Eswap - simInfo.Ecurrent > 0)
+        {
+            // attempt mutation
+            // for now just reverse the swap back to original
+            if (recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] == 0)
+            {
+                recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 1;
+                recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 0;
+            } else
+            {
+                recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 0;
+                recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 1;
+            }
+        } else
+        {
+            // keep changes, update correlations
+            simInfo.swapCount++;
+            for(int i = 0; i<opts->structSize; i++){
+                rec.S11[i] += 2*simInfo.tpChange[i];
+            }
+            for(int i = 0; i<rec.largestSide; i++){
+                rec.C00[i] += simInfo.chordChange[i];
+            }
+            rec.ChordTotal += simInfo.totalChordChange;
+            simInfo.Ecurrent = simInfo.Eswap;
+        }
+
+        // increase iteration count
+        simInfo.iterCount++;
+    }
+
     // if iter != 0 and E_current > E_swap (set e_current = e_swap at i == 0, remove condition)
 
     // select two points to swap, criteria = both interfaces and different phases
@@ -140,7 +298,16 @@ int YTA2D(options *opts)
 
     // Evaluate criteria (ignore, swap, or mutate)
 
-    // iter++, repeat
+    // print a test image to see what happened 
+
+    for(int i = 0; i < rec.nElements; i++)
+    {
+        recData[i] = recData[i] * 254;
+    }
+
+    writeTarget2D(opts, &rec, recData);
+
+    // memory management
 
     YTA_baseFree2D(&simInfo, &target, &rec);
 
