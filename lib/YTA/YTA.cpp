@@ -11,6 +11,7 @@ int YTA2D(options *opts)
     // get struct-size
     opts->structSize = (opts->blockSize * opts->blockSize) / 2 + 1;
     simInfo.lambda = opts->lambda;
+    simInfo.T0 = 0;
 
     // read target
     unsigned char *targetData;
@@ -137,8 +138,8 @@ int YTA2D(options *opts)
     {
         if(simInfo.iterCount % 10000 == 0)
         {
-            printf("Iter %ld, Swaps %d, Energy %1.3e, pore = %1.3e\n",
-                simInfo.iterCount, simInfo.swapCount, simInfo.Ecurrent, calc_pore2D(recData, rec.height, rec.width));
+            printf("Iter %ld, Swaps %d, Mutations %d, Energy %1.3e, pore = %1.3e\n",
+                simInfo.iterCount, simInfo.swapCount, simInfo.mutCount, simInfo.Ecurrent, calc_pore2D(recData, rec.height, rec.width));
         }
         // update E-current, if applicable
         if (simInfo.Ecurrent > simInfo.Eswap)
@@ -260,15 +261,41 @@ int YTA2D(options *opts)
         if (simInfo.Eswap - simInfo.Ecurrent > 0)
         {
             // attempt mutation
-            // for now just reverse the swap back to original
-            if (recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] == 0)
+            if (simInfo.T0 == 0)
             {
-                recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 1;
-                recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 0;
+                simInfo.T0 = -(simInfo.Eswap - simInfo.Ecurrent)/(simInfo.lambda*log(0.5));
+                printf("Initial T0 = %1.3e, initial energy %1.3e\n", simInfo.T0, simInfo.Ecurrent);
+                printf("Initial probability: %f\n", exp(- (simInfo.Eswap - simInfo.Ecurrent)/(simInfo.T0*simInfo.lambda)));
+                fflush(stdout);
+            }
+            simInfo.Tk = simInfo.T0 * pow(simInfo.lambda, simInfo.mutCount);
+            double temp1 = (float)rand()/(float)RAND_MAX;
+            
+            if(temp1 < exp(-(simInfo.Eswap - simInfo.Ecurrent)/simInfo.Tk))
+            {
+                // Mutation Successful
+                simInfo.mutCount++;
+                simInfo.Ecurrent = simInfo.Eswap;
+                // update correlations
+                for(int i = 0; i<opts->structSize; i++){
+                    rec.S11[i] += 2*simInfo.tpChange[i];
+                }
+                for(int i = 0; i<rec.largestSide; i++){
+                    rec.C00[i] += simInfo.chordChange[i];
+                }
+                rec.ChordTotal += simInfo.totalChordChange;
             } else
             {
-                recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 0;
-                recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 1;
+                // mutation failed, reverse swap
+                if (recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] == 0)
+                {
+                    recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 1;
+                    recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 0;
+                } else
+                {
+                    recData[simInfo.tempCoord1[0] * rec.width + simInfo.tempCoord1[1]] = 0;
+                    recData[simInfo.tempCoord2[0] * rec.width + simInfo.tempCoord2[1]] = 1;
+                }
             }
         } else
         {
