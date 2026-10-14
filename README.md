@@ -40,8 +40,6 @@ Use the CMake files for building the application.
 Current capabilities:
 
 - CPU accelerated material reconstruction via correlation functions (Y-T algorithm).
-- 
-
 
 ## Authors
 
@@ -69,21 +67,14 @@ If any material here is useful to you, please consider citing one of the followi
 
 ## Upcoming Changes
 
+- (ongoing) Refactor like TPS, makes more sense for larger projects to have linked objects.
+    - Might drop Windows support for a bit
 - 2D and 3D YTA code, enabled for multi-phase reconstruction.
 - Parallel programming with MPI (UNIX exclusive, no Windows).
 - Stochastic reconstruction methods will be implemented to the main execution loop.
 
-- A genConfig GUI will be added soon. I learned my lesson with larger projects, it is definitely necessary. I have had bad experiences with Qt, so I will try a GTK-based GUI next.
-
+- A genConfig GUI will be added soon. I learned my lesson with larger projects, it is definitely necessary.
 
 ## Acknowledgements
 
-This package is a culmination of many years of work. While the material reconstruction aspect was never the strict focus of any project/allocation, this was a necessary auxiliary step of many projects. The development was made possible by the following allocations:
-
-
-
-
-
-
-
-
+This package is not sponsored or supported by any grants. The original methods were developed as part of other publications, and the publications have their acknowledgements.
