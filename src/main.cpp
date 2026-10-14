@@ -1,8 +1,19 @@
+/*
+ *
+ * Welcome to BtB-MCR
+ *
+ *
+ * Main Contributors:
+ *
+ * - Andre Adam :)
+ *
+ * */
+
 #include <cstdio>
 #include <stdlib.h>
-#include <lib/YTA/YTA.cpp>
-#include <lib/dataStructures.hpp>
-#include <lib/userOpts.hpp>
+#include <YTA.hpp>
+#include <core.hpp>
+#include <utils.hpp>
 
 int main(int argc, char *argv[])
 {
