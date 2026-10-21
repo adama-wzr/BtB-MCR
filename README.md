@@ -64,6 +64,7 @@ If any material here is useful to you, please consider citing one of the followi
 
 **Stochastic Reconstruction**
 - Adam, A., Fang, H., & Li, X. (2024). Effective thermal conductivity estimation using a convolutional neural network and its application in topology optimization. Energy and AI, 15, 2666–5468. https://doi.org/10.1016/j.egyai.2023.100310
+- Adam, A., Stallard, S.L., Fang, H. et al. A General Framework for Predicting Permeability in Porous Structures Using Convolutional Neural Networks with Error Estimation. Transp Porous Med 152, 100 (2025). https://doi.org/10.1007/s11242-025-02239-4
 
 ## Upcoming Changes
 
