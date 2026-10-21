@@ -7,6 +7,6 @@ add_executable(BtB_main
 target_link_libraries(BtB_main
     PUBLIC
         core_lib
-        models_lib
+        yta_lib
         utils_lib
 )

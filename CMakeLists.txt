@@ -12,11 +12,15 @@ project(BtB-MCR LANGUAGES CXX VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(OpenMP REQUIRED)
+
 # Include directiories --------------------------
 
 add_subdirectory(lib/utils)
 add_subdirectory(lib/core)
 add_subdirectory(lib/YTA)
+
+add_subdirectory(src)
 
 # Include directories -------------------------
 # include_directories(
