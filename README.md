@@ -23,6 +23,7 @@ Linux requires MPI, while the Windows distribution relies on OpenMP for parallel
 - GNU C/C++ compiler prefered.
 - C++ 17 or later
 - CMake 3.10 or later
+- Open MPI 5.0 or later (not tested with anything else)
 
 GPU support will come to Linux at some point in the future. There are currently no plans to support Mac users, the package focuses on HPC applications.
 
@@ -32,7 +33,7 @@ A GUI is coming in the future. There are different requirements for compiling th
 
 ## Compiling
 
-Use the CMake files for building the application.
+Use the CMake files for building the application. If you are running with MPI, please run the source file with `mpiexec` command, as that is the prefered method. 
 
 
 ## Main Capabilities
