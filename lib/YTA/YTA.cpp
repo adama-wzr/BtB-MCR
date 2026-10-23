@@ -12,5 +12,7 @@ int YTA_2D(options *opts)
         printf("Hello from thread %d out of %d\n", tid, opts->nThreads);
     }
 
+    printf("Opts->nThreads = %d\n", opts->nThreads);
+
     return 0;
 }

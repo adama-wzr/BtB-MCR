@@ -1,14 +1,26 @@
 
 #include <parseInput.hpp>
 
+
 int parseGeneralInput(options *opts)
 {
     // assume filename
     std::string filename = "general_input.txt";
-    // try to open
-    if (std::filesystem::exists(filename) == false)
+    // // try to open
+    // if (std::filesystem::exists(filename) == false)
+    // {
+    //     printf("Couldn't find input file general_input.txt, please verify that it exists.\n");
+    //     return 1;
+    // }
+
+    if(FILE *TEST = fopen(filename.c_str(), "r"))
     {
+        fclose(TEST);
+    }else
+    {
+        printf("Couldn't find input file general_input.txt, please verify that it exists.\n");
         return 1;
+
     }
 
     // declare defaults
@@ -30,6 +42,12 @@ int parseGeneralInput(options *opts)
         {
             opts->nThreads = (int)tempD;
         }
+    }
+
+    if (opts->nThreads > 20)
+    {
+        printf("Anomalous nThreads, exiting....\n");
+        return 1;
     }
 
     return 0;

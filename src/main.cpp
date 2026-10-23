@@ -19,14 +19,45 @@
 #include <ImportAll_core.hpp>
 #include <YTA.hpp>
 
+#ifdef USE_MPI
+#include <mpi.h>
+#endif
+
 int main(int argc, char *argv[])
 {
+#ifdef USE_MPI
+    int rank;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     options opts;
 
-   parseGeneralInput(&opts); 
+    parseGeneralInput(&opts); 
 
-    testCORF();
+    if(rank == 0)
+    {
+        testCORF();
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
     YTA_2D(&opts);
+
+    MPI_Finalize();
+
+#else
+    options opts;
+    int stat = parseGeneralInput(&opts);
+    if (stat == 1)
+    {
+        return 1;
+    }
+
+    YTA_2D(&opts);
+    testCORF();
+
+#endif
+
     // Structs
     // options opts;
     // meshInfo target;

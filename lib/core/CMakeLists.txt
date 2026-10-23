@@ -7,7 +7,7 @@ target_sources(core_lib
     PRIVATE
         core.cpp
     PUBLIC
-        ImportAll_core
+        ImportAll_core.hpp
         core.hpp
 )
 
