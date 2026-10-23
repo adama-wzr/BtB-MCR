@@ -6,12 +6,15 @@ add_library(utils_lib STATIC)
 
 target_sources(utils_lib
     PRIVATE
+        stb_image.cpp
+        utils.cpp
         parseInput.cpp
         correlationFunctions.cpp
     PUBLIC
         parseInput.hpp
         ImportAll_utils.hpp
         correlationFunctions.hpp
+        utils.hpp
         stb_image.h
         stb_image_write.h
 )

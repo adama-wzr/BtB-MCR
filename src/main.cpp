@@ -37,12 +37,13 @@ int main(int argc, char *argv[])
     if(rank == 0 && opts.verbose)
     {
         printOpts(&opts);
-        testCORF();
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    YTA_2D(&opts);
+    if (opts.nD == 2)
+    {
+        YTA_2D(&opts, MPI_COMM_WORLD);
+    }
 
     MPI_Finalize();
 
@@ -57,7 +58,10 @@ int main(int argc, char *argv[])
     if (opts.verbose == 1)
         printOpts(&opts);
 
-    YTA_2D(&opts);
+    if(opts.nD == 2)
+    {
+        YTA_2D(&opts);
+    }
     testCORF();
 
 #endif
