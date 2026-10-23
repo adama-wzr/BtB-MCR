@@ -1,17 +1,55 @@
 
 #include <parseInput.hpp>
 
+int printOpts(options *opts)
+{
+    /*
+        Function printOpts:
+        Inputs:
+            - pointer to options struct
+        Ouputs:
+            - none.
+        Function will print user entered options (or defaults) to
+        the command line. The function also does basic error checking.
+    */
+    
+    printf("------------------------------------\n\n");
+    printf("            BtB - Options:          \n\n");
+    printf("------------------------------------\n\n");
+
+    if(opts->nD != 2 && opts->nD != 3)
+    {
+        printf("Error, nD not acceptable (nD = %d)\n", opts->nD);
+        return 1;
+    }
+
+    printf("nD: %d\n", opts->nD);
+    printf("Input Name: %s\n", opts->inputName);
+    printf("Output Name: %s\n", opts->outputName);
+    printf("Binary Threshold: %d\n", opts->TH);
+    printf("Target Width: %d\n", opts->targetWidth);
+    printf("Target Height: %d\n", opts->targetHeight);
+
+    if(opts->nD == 3)
+        printf("Target Depth: %d\n", opts->targetDepth);
+    
+    printf("------------------------------------\n\n");
+    printf("            Sim - Options:          \n\n");
+    printf("------------------------------------\n\n");
+
+    printf("RSPM Radius: %d\n", opts->RSPM_R);
+    printf("Min. Energy: %1.3e\n", opts->minEnergy);
+    printf("Max. Iter: %ld\n", opts->maxIter);
+    printf("Block Size: %d\n", opts->blockSize);
+    printf("Struct Size: %d\n", opts->structSize);
+
+    return 0;
+}
 
 int parseGeneralInput(options *opts)
 {
     // assume filename
     std::string filename = "general_input.txt";
-    // // try to open
-    // if (std::filesystem::exists(filename) == false)
-    // {
-    //     printf("Couldn't find input file general_input.txt, please verify that it exists.\n");
-    //     return 1;
-    // }
 
     if(FILE *TEST = fopen(filename.c_str(), "r"))
     {
@@ -34,21 +72,94 @@ int parseGeneralInput(options *opts)
 
     double tempD;
     char tempC[1000];
+    char tempFilenames[1000];
+    // set defaults
 
-    while(std::getline(InputFile, fileText))
+    opts->targetWidth = 100;
+    opts->targetHeight = 100;
+    opts->targetDepth = 1;
+    opts->nD = 2;
+    opts->verbose = 1;
+    opts->lambda = 0.995;
+
+    opts->maxIter = 1e9;
+    opts->minEnergy = 1e-6;
+
+    opts->blockSize = 20;
+
+    opts->nThreads = 1;
+
+    // Allocate memory for reading
+    
+    opts->inputName  = (char*)malloc(1000*sizeof(char));
+	opts->outputName = (char*)malloc(1000*sizeof(char));
+
+    // sprintf(opts->outputName, "defOut.csv");
+    // sprintf(opts->inputName, "defIn.csv");
+
+    // read input file
+
+    while (std::getline(InputFile, fileText))
     {
         sscanf(fileText.c_str(), "%s %lf", tempC, &tempD);
-        if (strcmp(tempC, "nThreads:") == 0)
+        if (strcmp(tempC, "nD:") == 0)
         {
-            opts->nThreads = (int)tempD;
+            opts->nD = tempD;
+        }
+        else if (strcmp(tempC, "width:") == 0)
+        {
+            opts->targetWidth = (int)tempD;
+        }
+        else if (strcmp(tempC, "height:") == 0)
+        {
+            opts->targetHeight = (int)tempD;
+        }
+        else if (strcmp(tempC, "depth:") == 0)
+        {
+            opts->targetDepth = (int)tempD;
+        }
+        else if (strcmp(tempC, "RSPM_R:") == 0)
+        {
+            opts->RSPM_R = (int)tempD;
+        }
+        else if (strcmp(tempC, "inputName:") == 0)
+        {
+            sscanf(fileText.c_str(), "%s %s", tempC, tempFilenames);
+            strcpy(opts->inputName, tempFilenames);
+        }
+        else if (strcmp(tempC, "outputName:") == 0)
+        {
+            sscanf(fileText.c_str(), "%s %s", tempC, tempFilenames);
+            strcpy(opts->outputName, tempFilenames);
+        }
+        else if (strcmp(tempC, "Iter:") == 0)
+        {
+            double temp = tempD;
+            opts->maxIter = (long int)temp;
+        }
+        else if (strcmp(tempC, "Energy:") == 0)
+        {
+            opts->minEnergy = tempD;
+        }
+        else if (strcmp(tempC, "TH:") == 0)
+        {
+            opts->TH = (int)tempD;
+        }
+        else if (strcmp(tempC, "BlockSize:") == 0)
+        {
+            opts->blockSize = (int)tempD;
+        }
+        else if (strcmp(tempC, "Lambda:") == 0)
+        {
+            opts->lambda = tempD;
         }
     }
 
-    if (opts->nThreads > 20)
-    {
-        printf("Anomalous nThreads, exiting....\n");
-        return 1;
-    }
+    // update struct size based on block size
+
+    opts->structSize = (opts->blockSize * opts->blockSize / 2) + 1;
+
+    InputFile.close();
 
     return 0;
 }

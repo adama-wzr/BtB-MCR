@@ -34,8 +34,9 @@ int main(int argc, char *argv[])
 
     parseGeneralInput(&opts); 
 
-    if(rank == 0)
+    if(rank == 0 && opts.verbose)
     {
+        printOpts(&opts);
         testCORF();
     }
 
@@ -52,6 +53,9 @@ int main(int argc, char *argv[])
     {
         return 1;
     }
+
+    if (opts.verbose == 1)
+        printOpts(&opts);
 
     YTA_2D(&opts);
     testCORF();
