@@ -3,7 +3,7 @@ nD: 2
 TH: 200
 width: 500
 height: 500
-inputName: CycledMC811_ds.jpg
+inputName: testSEM.jpg
 outputName: test.jpg
 BlockSize: 100
 RSPM_R: 10

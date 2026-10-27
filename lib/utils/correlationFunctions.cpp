@@ -38,10 +38,12 @@ double calc_pore2D(unsigned char* arr, int height, int width)
     for(int i = 0; i < height*width; i++)
     {
         if(arr[i] == 0)
-            count++; 
+            count+=1;
     }
 
-    return porosity = (double) count / (height*width);
+    porosity = (double) count/ (double) (height*width);
+
+    return porosity;
 }
 
 /*

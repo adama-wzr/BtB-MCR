@@ -210,10 +210,10 @@ int readTarget2D(options *opts, meshInfo *mesh, unsigned char **target_array)
 
     mesh->nElements = mesh->width * mesh->height;
 
-    if(nChannels != 1)
+    if(nChannels == 1)
+        return 0;
+    else
         return 1;
-
-    return 0;
 }
 
 /*
