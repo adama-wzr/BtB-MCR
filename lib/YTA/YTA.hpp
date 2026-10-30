@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <omp.h>
 #include <iostream>
+#include <ctime>
+
 
 #ifdef USE_MPI
 #include <mpi.h>

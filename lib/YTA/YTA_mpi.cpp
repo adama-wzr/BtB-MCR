@@ -58,7 +58,7 @@ void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec)
     free(rec->S11);
 
     free(rec->localChord);
-    free(rec->localChord_b4);
+free(rec->localChord_b4);
     free(rec->localTP);
     free(rec->localTP_b4);
 
@@ -319,9 +319,47 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
     simInfo.T0 = 0;
 
+    clock_t begin = clock();
+    double t1, t2;
+
+    t1 = MPI_Wtime();
+
+    // Allocated necessary arrays
+
+    rec.height = opts->targetHeight;
+    rec.width = opts->targetWidth;
+
+    rec.nElements = rec.height * rec.width;
+
+    rec.largestSide = (rec.height > rec.width) ? rec.height : rec.width;
+
+    // allocate arrays for reconstruction
+    unsigned char *recData = (unsigned char *)malloc(sizeof(char) * rec.nElements);
+    memset(recData, 0, sizeof(char) * rec.nElements);
+
+    YTA_baseAlloc2D(&simInfo, &target, &rec);
+
+    int *change_coordinates, *all_coordinates;
+
+    int* swap_flag;
+
+    change_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*6);
+
+    if (rank == 0)
+    {
+        all_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*6*opts->nThreads);
+        swap_flag = (int *)malloc(sizeof(int)*rec.height*rec.width);
+    }
+
+    time_t t;
+
+    srand((unsigned ) (rank+1)*time(&t));
+
+    // root section of the code
 
     if(rank == 0)
     {
+        // Step1: Read target 
         unsigned char *targetData;
         if (readTarget2D(opts, &target, &targetData))
         {
@@ -347,27 +385,20 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
         target.porosity = calc_pore2D(targetData, target.height, target.width);
         target.VF = 1.0 - target.porosity;
+        target.largestSide = (target.height > target.width) ? target.height : target.width;
 
         if(opts->verbose)
         {
             printf("Target Data Read. Height = %d, Width = %d, Porosity = %1.3e\n", target.height, target.width, target.porosity);
         }
 
-        // get largest side
+        // Calculate correlation functions of the target
+        TP2D(targetData, &simInfo, &target);
+        CL2D(targetData, opts, &target);
 
-        rec.height = opts->targetHeight;
-        rec.width = opts->targetWidth;
-
-        rec.nElements = rec.height * rec.width;
-
-        target.largestSide = (target.height > target.width) ? target.height : target.width;
-        rec.largestSide = (rec.height > rec.width) ? rec.height : rec.width;
-
-        // allocate arrays for reconstruction
-        unsigned char *recData = (unsigned char *)malloc(sizeof(char) * rec.nElements);
-        memset(recData, 0, sizeof(char) * rec.nElements);
-
-        YTA_baseAlloc2D(&simInfo, &target, &rec);
+        // Pass target information to other cores
+        MPI_Bcast(target.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+        MPI_Bcast(target.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
 
         // RSPM
         RSPM2D(simInfo.RSPM_R, &rec, recData, target.VF);
@@ -375,22 +406,52 @@ int YTA_2D(options *opts, MPI_Comm comm)
         // Correct data
         correctVF2D(&rec, recData, target.VF);
 
-        // seed rng
-        time_t t;
-        srand((unsigned ) time(&t));
-
-        // Functions below segfault pretty hard!
-
-        // calculate initial correlations target
-        TP2D(targetData, &simInfo, &target);
-        CL2D(targetData, opts, &target);
-
-        // same for rec
+        // corr. func for rec
         TP2D(recData, &simInfo, &rec);
         CL2D(recData, opts, &rec);
 
+        rec.porosity = calc_pore2D(recData, rec.height, rec.width);
+        rec.VF = 1.0 - rec.porosity;
+
         // get energy
+        simInfo.Ecurrent = 0.0;
+        for(int i = 0; i < simInfo.structSize; i++)
+        {
+            target.TP_Total[i] = target.S11[i] + target.S01[i] + target.S00[i];
+            rec.TP_Total[i] = rec.S11[i] + rec.S01[i] + rec.S00[i];
+            if(target.TP_Total[i] != 0)
+            {
+                simInfo.Ecurrent += pow((rec.S11[i]/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]),2);
+            }
+        }
+
+        target.ChordTotal = 0;
+        rec.ChordTotal = 0;
+
+        for(int i = 0; i < rec.largestSide; i++)
+        {
+            target.ChordTotal += target.C00[i];
+            rec.ChordTotal += rec.C00[i];
+        }
+
+        for (int i = 0; i < rec.largestSide; i++)
+        {
+            simInfo.Ecurrent += pow((rec.C00[i]/rec.ChordTotal - target.C00[i]/target.ChordTotal),2);
+        }
+        printf("Calculated Energy = %1.3e\n", simInfo.Ecurrent);
+
+        long int iterCount = 0;
+        while(iterCount < simInfo.rootIter && simInfo.Ecurrent > simInfo.MinEnergy)
+        {
+            iterCount++;
+        }
     }
+
+    // workers section of the code
+
+    // Get relevant target correlation functions
+    MPI_Bcast(target.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+    MPI_Bcast(target.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
 
     MPI_Barrier(comm);
 
