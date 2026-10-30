@@ -87,7 +87,7 @@ void randomNoise2D(meshInfo *mesh, unsigned char *target_arr, double targetVF)
     return;
 }
 
-void RSPM2D(options *opts, meshInfo *mesh, unsigned char *target_arr, double targetVF)
+void RSPM2D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, double targetVF)
 {
     /*
         Function RSPM2D:
@@ -115,7 +115,7 @@ void RSPM2D(options *opts, meshInfo *mesh, unsigned char *target_arr, double tar
     while(VF < targetVF)
     {
         // randomly draw circle center and radius
-        int radius = rand() % (opts->RSPM_R);
+        int radius = rand() % (RSPM_R);
         int center_i = rand() % (int)(mesh->height);
         int center_j = rand() % (int)(mesh->width);
         
@@ -283,4 +283,63 @@ int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
     return 0;
 }
 
+
+
+int detectInterface3D(unsigned int *arr, int img_size, int i, int j, int k){
+    int N;
+    int S;
+    int E;
+    int W;
+    int B;
+    int F;
+
+    int current_phase;
+
+    printf("This function needs to be re-worked! Don't use!!!!!\n");
+
+    if(i + 1 == img_size){
+        N = 0;
+        S = i - 1;
+    } else if(i-1 < 0){
+        N = i + 1;
+        S = img_size - 1;
+    } else{
+        N = i + 1;
+        S = i - 1;
+    }
+
+    if(j + 1 == img_size){
+        W = 0;
+        E = j - 1;
+    } else if(j-1 < 0){
+        W = j + 1;
+        E = img_size - 1;
+    } else{
+        W = j + 1;
+        E = j - 1;
+    }
+
+    if(k + 1 == img_size){
+        F = 0;
+        B = k - 1;
+    } else if(k-1 < 0){
+        F = k + 1;
+        B = img_size - 1;
+    } else{
+        F = k + 1;
+        B = k - 1;
+    }
+
+    current_phase = arr[i*img_size*img_size + j*img_size + k];
+
+    if(current_phase != arr[N*img_size*img_size + j*img_size + k] || current_phase != arr[S*img_size*img_size + j*img_size + k] 
+        || current_phase != arr[i*img_size*img_size + E*img_size + k] || current_phase != arr[i*img_size*img_size + W*img_size + k]
+        || current_phase != arr[i*img_size*img_size + j*img_size + B] || current_phase != arr[i*img_size*img_size + j*img_size + F]){
+        return 0;
+    } else{
+        return 1;
+    }
+    printf("I'm not supposed to be here?\n");
+    return 0;
+}
 

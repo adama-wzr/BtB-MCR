@@ -23,6 +23,7 @@
 #include <mpi.h>
 #endif
 
+
 int main(int argc, char *argv[])
 {
 #ifdef USE_MPI
@@ -40,11 +41,16 @@ int main(int argc, char *argv[])
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    if (opts.nD == 2)
-    {
-        YTA_2D(&opts, MPI_COMM_WORLD);
-    }
 
+    if (opts.simType == 0 || 1)
+    {
+        if(opts.nD == 2)
+            YTA_2D(&opts, MPI_COMM_WORLD);
+    }
+    else
+    {
+       printf("Not implemented yet!\n"); 
+    }
     MPI_Finalize();
 
 #else
@@ -58,10 +64,10 @@ int main(int argc, char *argv[])
     if (opts.verbose == 1)
         printOpts(&opts);
 
-    if(opts.nD == 2)
-    {
-        YTA_2D(&opts);
-    }
+    // if(opts.nD == 2)
+    // {
+    //     YTA_2D(&opts);
+    // }
     testCORF();
 
 #endif
@@ -69,7 +75,7 @@ int main(int argc, char *argv[])
     // Structs
     // options opts;
     // meshInfo target;
-    // meshInfo rec;
+// meshInfo rec;
     //
     // char filename[50];
     //

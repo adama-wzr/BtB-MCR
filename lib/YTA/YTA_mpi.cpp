@@ -70,7 +70,7 @@ void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec)
 }
 
 
-void YTA_baseAlloc2D(options *opts, sYTA *info, meshInfo *target, meshInfo *rec)
+void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 {
     /*
         YTA_baseAlloc2D Function:
@@ -91,50 +91,50 @@ void YTA_baseAlloc2D(options *opts, sYTA *info, meshInfo *target, meshInfo *rec)
 
     // gotta allocate all arrays in target
 
-    target->S00 = (double *)malloc(sizeof(double) * opts->structSize);
-    target->S11 = (double *)malloc(sizeof(double) * opts->structSize);
-    target->S01 = (double *)malloc(sizeof(double) * opts->structSize);
+    target->S00 = (double *)malloc(sizeof(double) * info->structSize);
+    target->S11 = (double *)malloc(sizeof(double) * info->structSize);
+    target->S01 = (double *)malloc(sizeof(double) * info->structSize);
 
     target->C00 = (double *)malloc(sizeof(double) * rec->largestSide);
 
-    target->TP_Total = (int *)malloc(sizeof(int) * opts->structSize);
+    target->TP_Total = (int *)malloc(sizeof(int) * info->structSize);
 
 
     // memset target
 
-    memset(target->S00, 0, sizeof(double) * opts->structSize);
-    memset(target->S11, 0, sizeof(double) * opts->structSize);
-    memset(target->S01, 0, sizeof(double) * opts->structSize);
+    memset(target->S00, 0, sizeof(double) * info->structSize);
+    memset(target->S11, 0, sizeof(double) * info->structSize);
+    memset(target->S01, 0, sizeof(double) * info->structSize);
 
     memset(target->C00, 0, sizeof(double) * rec->largestSide);
 
-    memset(target->TP_Total, 0, sizeof(int) * opts->structSize);
+    memset(target->TP_Total, 0, sizeof(int) * info->structSize);
 
     // malloc in rec
 
-    rec->S00 = (double *)malloc(sizeof(double) * opts->structSize);
-    rec->S01 = (double *)malloc(sizeof(double) * opts->structSize);
-    rec->S11 = (double *)malloc(sizeof(double) * opts->structSize);
+    rec->S00 = (double *)malloc(sizeof(double) * info->structSize);
+    rec->S01 = (double *)malloc(sizeof(double) * info->structSize);
+    rec->S11 = (double *)malloc(sizeof(double) * info->structSize);
 
     rec->C00 = (double *)malloc(sizeof(double) * rec->largestSide);
 
-    rec->TP_Total = (int *)malloc(sizeof(int) * opts->structSize);
+    rec->TP_Total = (int *)malloc(sizeof(int) * info->structSize);
 
     // memset in rec
 
-    memset(rec->S00, 0, sizeof(double) * opts->structSize);
-    memset(rec->S11, 0, sizeof(double) * opts->structSize);
-    memset(rec->S01, 0, sizeof(double) * opts->structSize);
+    memset(rec->S00, 0, sizeof(double) * info->structSize);
+    memset(rec->S11, 0, sizeof(double) * info->structSize);
+    memset(rec->S01, 0, sizeof(double) * info->structSize);
 
     memset(rec->C00, 0, sizeof(double) * rec->largestSide);
 
-    memset(rec->TP_Total, 0, sizeof(int) * opts->structSize);
+    memset(rec->TP_Total, 0, sizeof(int) * info->structSize);
 
     // rec and info needs correlation function changes
 
-    rec->localTP    = (int *)malloc(sizeof(int) * opts->structSize);
-    rec->localTP_b4 = (int *)malloc(sizeof(int) * opts->structSize);
-    info->tpChange  = (int *)malloc(sizeof(int) * opts->structSize);
+    rec->localTP    = (int *)malloc(sizeof(int) * info->structSize);
+    rec->localTP_b4 = (int *)malloc(sizeof(int) * info->structSize);
+    info->tpChange  = (int *)malloc(sizeof(int) * info->structSize);
 
     rec->localChord     = (int *)malloc(sizeof(int) * rec->largestSide);
     rec->localChord_b4  = (int *)malloc(sizeof(int) * rec->largestSide);
@@ -142,9 +142,9 @@ void YTA_baseAlloc2D(options *opts, sYTA *info, meshInfo *target, meshInfo *rec)
 
     // set those to 0 as well
 
-    memset(rec->localTP,    0, sizeof(int) * opts->structSize);
-    memset(rec->localTP_b4, 0, sizeof(int) * opts->structSize);
-    memset(info->tpChange,  0, sizeof(int) * opts->structSize);
+    memset(rec->localTP,    0, sizeof(int) * info->structSize);
+    memset(rec->localTP_b4, 0, sizeof(int) * info->structSize);
+    memset(info->tpChange,  0, sizeof(int) * info->structSize);
     
     memset(rec->localChord,     0, sizeof(int) * rec->largestSide);
     memset(rec->localChord_b4,  0, sizeof(int) * rec->largestSide);
@@ -233,7 +233,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     return;
 }
 
-void localTP(options *opts, meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag)
+void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag)
 {
     /*
         Function localTP:
@@ -250,9 +250,9 @@ void localTP(options *opts, meshInfo *rec, unsigned char *recData, int row, int 
         If the flag is 0, store at rec.tp_b4, if not store at rec.local_tp
     */
 
-    for(int i = row - opts->blockSize/2; i <= row + opts->blockSize/2; i++)
+    for(int i = row - opts->blk_size/2; i <= row + opts->blk_size/2; i++)
     {
-        for(int j = col - opts->blockSize/2; j <= col + opts->blockSize/2; j++)
+        for(int j = col - opts->blk_size/2; j <= col + opts->blk_size/2; j++)
         {
             int tempCol = j;
             int tempRow = i;
@@ -309,7 +309,14 @@ int YTA_2D(options *opts, MPI_Comm comm)
     meshInfo target;
     sYTA simInfo;
 
-    simInfo.lambda = opts->lambda;
+    if (parseInputYTA(&simInfo) == 1)
+    {
+        return 1;
+    }
+
+    if(opts->verbose && rank == 0)
+        printOptsYTA(&simInfo);
+
     simInfo.T0 = 0;
 
 
@@ -360,9 +367,10 @@ int YTA_2D(options *opts, MPI_Comm comm)
         unsigned char *recData = (unsigned char *)malloc(sizeof(char) * rec.nElements);
         memset(recData, 0, sizeof(char) * rec.nElements);
 
+        YTA_baseAlloc2D(&simInfo, &target, &rec);
 
         // RSPM
-        RSPM2D(opts, &rec, recData, target.VF);
+        RSPM2D(simInfo.RSPM_R, &rec, recData, target.VF);
 
         // Correct data
         correctVF2D(&rec, recData, target.VF);
@@ -374,17 +382,14 @@ int YTA_2D(options *opts, MPI_Comm comm)
         // Functions below segfault pretty hard!
 
         // calculate initial correlations target
-        // printf("TP2D and CL2D!\n");
-        // TP2D(targetData, opts, &target);
-        // CL2D(targetData, opts, &target);
+        TP2D(targetData, &simInfo, &target);
+        CL2D(targetData, opts, &target);
 
         // same for rec
-        // printf("TP2D and CL2D on Rec!\n");
-        // TP2D(recData, opts, &rec);
-        // CL2D(recData, opts, &rec);
+        TP2D(recData, &simInfo, &rec);
+        CL2D(recData, opts, &rec);
 
         // get energy
-        printf("Got Here safely!\n");
     }
 
     MPI_Barrier(comm);

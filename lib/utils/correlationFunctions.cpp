@@ -52,7 +52,7 @@ double calc_pore2D(unsigned char* arr, int height, int width)
 
 */
 
-void TP2D(unsigned char *arr, options *opts, meshInfo *mesh)
+void TP2D(unsigned char *arr, sYTA *opts, meshInfo *mesh)
 {
     /*
         Function TP2D:
@@ -68,7 +68,7 @@ void TP2D(unsigned char *arr, options *opts, meshInfo *mesh)
     */
 
 
-    int blk = opts->blockSize;
+    int blk = opts->blk_size;
 
     for(int index = 0; index < mesh->nElements; index++)
     {

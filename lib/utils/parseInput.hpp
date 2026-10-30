@@ -10,6 +10,10 @@
 
 int printOpts(options *opts);
 
+int printOptsYTA(sYTA *yta_opts);
+
 int parseGeneralInput(options *opts);
+
+int parseInputYTA(sYTA *yta_opts);
 
 #endif
