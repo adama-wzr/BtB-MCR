@@ -181,6 +181,8 @@ int parseInputYTA(sYTA *yta_opts)
     yta_opts->localIter = 1e5;
     yta_opts->RSPM_R = 10;
 
+    yta_opts->mutCount = 0;
+    yta_opts->swapCount = 0;
     // read input file
 
     while (std::getline(InputFile, fileText))
