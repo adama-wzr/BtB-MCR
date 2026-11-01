@@ -98,7 +98,7 @@ void RSPM2D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, doub
             - target VF
         Output:
             - none
-        
+
         Function will perform the operation for random-sphere packing
         on the selected domain, while targeting a certain VF.
     */
@@ -118,7 +118,7 @@ void RSPM2D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, doub
         int radius = rand() % (RSPM_R);
         int center_i = rand() % (int)(mesh->height);
         int center_j = rand() % (int)(mesh->width);
-        
+
         // Draw the circle
 
         for (int row = center_i - radius; row <= center_i + radius; row++)
@@ -260,7 +260,7 @@ int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
     }
 
     if(recData[row * rec->width + W] != currentPhase || recData[row * rec->width + E] != currentPhase)
-        return 1;
+        return 0;
 
     if (row == 0)
     {
@@ -278,9 +278,9 @@ int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
     }
 
     if(recData[S * rec->width + col] != currentPhase || recData[N * rec->width + col] != currentPhase)
-        return 1;
+        return 0;
 
-    return 0;
+    return 1;
 }
 
 

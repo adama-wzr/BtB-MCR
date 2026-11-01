@@ -207,7 +207,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     {
         if(recData[row * rec->width + j] == 1)
             continue;
-        for(int n = 0; n < rec->width; n++)
+        for(int n = 0; n < rec->width - j; n++)
         {
             if (j + n + 1 == rec->width)
             {
@@ -215,7 +215,6 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
                     rec->localChord_b4[n+1] += 1;
                 else
                     rec->localChord[n+1] += 1;
-                
                 break;
             }
 
@@ -276,6 +275,7 @@ void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col
             {
                 tempRow = i - rec->height;
             }
+
             int distance = (int)pow((i - row), 2) + (int)pow((j - col), 2);
             if(recData[row * rec->width + col] == recData[tempRow * rec->width + tempCol])
             {
@@ -334,8 +334,8 @@ int YTA_2D(options *opts, MPI_Comm comm)
     rec.largestSide = (rec.height > rec.width) ? rec.height : rec.width;
 
     // allocate arrays for reconstruction
-    unsigned char *recData = (unsigned char *)malloc(sizeof(char) * rec.nElements);
-    memset(recData, 0, sizeof(char) * rec.nElements);
+    unsigned char *recData = (unsigned char *)malloc(sizeof(unsigned char) * rec.nElements);
+    memset(recData, 0, sizeof(unsigned char) * rec.nElements);
 
     YTA_baseAlloc2D(&simInfo, &target, &rec);
 
@@ -453,13 +453,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
             simInfo.tempCoord2[0] = rand() % (int)(rec.height);
             simInfo.tempCoord2[1] = rand() % (int)(rec.width);
 
-            while(detectInterface2D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[0]) == 1)
+            while(detectInterface2D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1]) == 1)
             {
                 simInfo.tempCoord1[0] = rand() % (int)(rec.height);
                 simInfo.tempCoord1[1] = rand() % (int)(rec.width);
             }
 
-            while(detectInterface2D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[0]) == 1)
+            while(detectInterface2D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1]) == 1)
             {
                 simInfo.tempCoord2[0] = rand() % (int)(rec.height);
                 simInfo.tempCoord2[1] = rand() % (int)(rec.width);
@@ -481,7 +481,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 {
                     simInfo.tempCoord2[0] = rand() % (int)(rec.height);
                     simInfo.tempCoord2[1] = rand() % (int)(rec.width);
-                    while(detectInterface2D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[0]) == 1)
+                    while(detectInterface2D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1]) == 1)
                     {
                         simInfo.tempCoord2[0] = rand() % (int)(rec.height);
                         simInfo.tempCoord2[1] = rand() % (int)(rec.width);
@@ -499,6 +499,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
             memset(rec.localChord_b4, 0, sizeof(double)*rec.largestSide);
             memset(simInfo.chordChange, 0, sizeof(double)*rec.largestSide);
 
+            simInfo.totalChordChange = 0;
 
             // make sure a = 0 before swap and b = 1;
             if(recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] == 0)
@@ -510,20 +511,20 @@ int YTA_2D(options *opts, MPI_Comm comm)
             }
 
             // local costs
-            localTP(&simInfo, &rec, recData, simInfo.b[1], simInfo.b[0], 0);
+            localTP(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], 0);
 
-            localChord(&rec, recData, simInfo.b[1], simInfo.b[0], 0);
-            localChord(&rec, recData, simInfo.a[1], simInfo.a[0], 0);
+            localChord(&rec, recData, simInfo.b[0], simInfo.b[1], 0);
+            localChord(&rec, recData, simInfo.a[0], simInfo.a[1], 0);
 
             // complete the swap
-            recData[simInfo.a[1]*rec.width + simInfo.a[0]] = 1;
-            recData[simInfo.b[1]*rec.width + simInfo.b[0]] = 0;
+            recData[simInfo.a[0]*rec.width + simInfo.a[1]] = 1;
+            recData[simInfo.b[0]*rec.width + simInfo.b[1]] = 0;
 
             // evaluate local correlation again
-            localTP(&simInfo, &rec, recData, simInfo.a[1], simInfo.a[0], 1);
+            localTP(&simInfo, &rec, recData, simInfo.a[0], simInfo.a[1], 1);
 
-            localChord(&rec, recData, simInfo.b[1], simInfo.b[0], 1);
-            localChord(&rec, recData, simInfo.a[1], simInfo.a[0], 1);
+            localChord(&rec, recData, simInfo.b[0], simInfo.b[1], 1);
+            localChord(&rec, recData, simInfo.a[0], simInfo.a[1], 1);
 
             // get two-point correlation change
             for(int i = 0; i < simInfo.structSize; i++)
@@ -531,7 +532,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 simInfo.tpChange[i] = rec.localTP[i] - rec.localTP_b4[i];
             }
 
-            simInfo.totalChordChange = 0;
+
             // get chord-length change
             for (int i = 0; i < rec.largestSide; i++)
             {
@@ -584,15 +585,15 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 else
                 {
                     // no mutation, revert swap
-                    if (recData[simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[0]] == 0)
+                    if (recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] == 0)
                     {
-                        recData[simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[0]] = 1;
-                        recData[simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[0]] = 0;
+                        recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] = 1;
+                        recData[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] = 0;
                     }
                     else
                     {
-                        recData[simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[0]] = 0;
-                        recData[simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[0]] = 1;
+                        recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] = 0;
+                        recData[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] = 1;
                     }
                 }
             }
@@ -614,15 +615,40 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 rec.ChordTotal += simInfo.totalChordChange;
             }
 
-            if(iterCount % 100000 == 0)
+            if(iterCount % 10000 == 0)
             {
+                rec.porosity = calc_pore2D(recData, rec.height, rec.width);
+                printf("Porosite = %1.3e\n", rec.porosity);
                 printf("Iter = %d, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
             }
             iterCount++;
+
+        }
+
+        // gc
+        // free(targetData);
+        // free(all_coordinates);
+        // free(swap_flag);
+
+        for(int i = 0; i < rec.height; i++ )
+        {
+            for(int j = 0; j < rec.width; j++)
+            {
+                if(recData[i*rec.width + j] == 0)
+                {
+                    recData[i*rec.width + j] = 0;
+                }else{
+                    recData[i*rec.width + j] = 254;
+                }
+            }
         }
 
         // Out of the root main Loop, let's save the image just in case
-        stbi_write_jpg("Test.jpg", rec.width, rec.height, 1, recData, 100);
+        printf("Saving Image!\n");
+        stbi_write_jpg("Test.jpg", (int)rec.width, (int)rec.height, 1, recData, 100);
+        printf("Image Saved!\n");
+        MPI_Barrier(comm);
+        return 0;
     }
 
     // workers section of the code
