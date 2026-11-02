@@ -182,6 +182,11 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             continue;
         for(int n = 0; n < rec->height; n++)
         {
+            if (n+1 > rec->largestSide)
+            {
+                printf("Error!\n");
+                break;
+            }
             if(i + n + 1 == rec->height)
             {
                 if(swapFlag == 0)
@@ -209,6 +214,11 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             continue;
         for(int n = 0; n < rec->width - j; n++)
         {
+            if (n+1 > rec->largestSide)
+            {
+                printf("Error!\n");
+                break;
+            }
             if (j + n + 1 == rec->width)
             {
                 if(swapFlag == 0)
@@ -279,6 +289,11 @@ void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col
             int distance = (int)pow((i - row), 2) + (int)pow((j - col), 2);
             if(recData[row * rec->width + col] == recData[tempRow * rec->width + tempCol])
             {
+                if(distance > opts->structSize)
+                {
+                    printf("Error! Distance out of bounds!");
+                    return;
+                }
                 if (swapFlag == 0)
                     rec->localTP_b4[distance] += 1;
                 else
@@ -491,13 +506,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(double)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(double)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(double)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(double)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(double)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(double)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
 
@@ -619,7 +634,8 @@ int YTA_2D(options *opts, MPI_Comm comm)
             {
                 rec.porosity = calc_pore2D(recData, rec.height, rec.width);
                 printf("Porosite = %1.3e\n", rec.porosity);
-                printf("Iter = %d, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
+                printf("Iter = %ld, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
+                fflush(stdout);
             }
             iterCount++;
 

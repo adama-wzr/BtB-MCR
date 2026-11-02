@@ -188,7 +188,7 @@ int parseInputYTA(sYTA *yta_opts)
     while (std::getline(InputFile, fileText))
     {
         sscanf(fileText.c_str(), "%s %lf", tempC, &tempD);
-        if (strcmp(tempC, "blw_size:") == 0)
+        if (strcmp(tempC, "blk_size:") == 0)
         {
             yta_opts->blk_size = (unsigned int)tempD;
         }
