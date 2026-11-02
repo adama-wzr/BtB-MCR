@@ -524,6 +524,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 simInfo.b[0] = simInfo.tempCoord2[0];
                 simInfo.b[1] = simInfo.tempCoord2[1];
             }
+            else
+            {
+                simInfo.b[0] = simInfo.tempCoord1[0];
+                simInfo.b[1] = simInfo.tempCoord1[1];
+                simInfo.a[0] = simInfo.tempCoord2[0];
+                simInfo.a[1] = simInfo.tempCoord2[1];
+            }
 
             // local costs
             localTP(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], 0);
@@ -593,7 +600,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     }
                     for(int i = 0; i < rec.largestSide; i++)
                     {
-                        rec.C00[i] += 2*simInfo.chordChange[i];
+                        rec.C00[i] += simInfo.chordChange[i];
                     }
                     rec.ChordTotal += simInfo.totalChordChange;
                 }
@@ -625,7 +632,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 }
                 for(int i = 0; i < rec.largestSide; i++)
                 {
-                    rec.C00[i] += 2*simInfo.chordChange[i];
+                    rec.C00[i] += simInfo.chordChange[i];
                 }
                 rec.ChordTotal += simInfo.totalChordChange;
             }
