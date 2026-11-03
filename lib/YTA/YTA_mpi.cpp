@@ -141,15 +141,20 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
     info->chordChange   = (int *)malloc(sizeof(int) * rec->largestSide);
 
     // set those to 0 as well
-
+    
     memset(rec->localTP,    0, sizeof(int) * info->structSize);
     memset(rec->localTP_b4, 0, sizeof(int) * info->structSize);
     memset(info->tpChange,  0, sizeof(int) * info->structSize);
-    
+
     memset(rec->localChord,     0, sizeof(int) * rec->largestSide);
     memset(rec->localChord_b4,  0, sizeof(int) * rec->largestSide);
     memset(info->chordChange,   0, sizeof(int) * rec->largestSide);
 
+    // Init the total counts
+    target->ChordTotal = 0;
+    rec->ChordTotal = 0;
+    info->Ecurrent = 0;
+    info->Eswap = 0;
     return;
 }
 
@@ -645,8 +650,29 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 fflush(stdout);
             }
             iterCount++;
-
         }
+
+        printf("Root done with initial loop!\n");
+
+        MPI_Barrier(comm);
+
+        MPI_Bcast(recData, rec.nElements, MPI_UNSIGNED_CHAR, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&target.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+
 
         // gc
         // free(targetData);
@@ -682,5 +708,25 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
     MPI_Barrier(comm);
 
+    MPI_Bcast(recData, rec.nElements, MPI_UNSIGNED_CHAR, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(&target.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
+    MPI_Barrier(comm);
+
+
+    printf("Core %d, received all the data!\n", rank);
+    MPI_Barrier(comm);
     return 0;
 }
