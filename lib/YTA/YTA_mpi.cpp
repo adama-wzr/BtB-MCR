@@ -180,7 +180,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     {
         if(recData[i * rec->width + col] == 1)
             continue;
-        for(int n = 0; n < rec->height; n++)
+        for(int n = 0; n < rec->height - i; n++)
         {
             if (n+1 > rec->largestSide)
             {
@@ -668,7 +668,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
         // Out of the root main Loop, let's save the image just in case
         printf("Saving Image!\n");
-        stbi_write_jpg("Test.jpg", (int)rec.width, (int)rec.height, 1, recData, 100);
+        stbi_write_jpg(opts->outputName, (int)rec.width, (int)rec.height, 1, recData, 100);
         printf("Image Saved!\n");
         MPI_Barrier(comm);
         return 0;
