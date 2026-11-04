@@ -671,7 +671,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
         MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
 
-
         // communications done, set changes-coords to -1
         for(int i = 0; i < simInfo.localIter; i++)
         {
@@ -1072,6 +1071,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
     MPI_Barrier(comm);
 
     printf("Core %d, received all the data!\n", rank);
+
     for (int i = 0; i < simInfo.localIter; i++)
     {
         for(int j = 0; j < 4; j++)
@@ -1080,6 +1080,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
         }
     }
     printf("Starting Main Loop! Rank: %d\n", rank);
+    simInfo.Eswap = 1.0;
     // worker infinite loop
     while(true)
     {
@@ -1151,7 +1152,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
             memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
-
+            printf("Memories allocated!\n");
             // make sure a = 0 before swap and b = 1;
             if(recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] == 0)
             {
@@ -1245,9 +1246,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     rec.C00[i] += simInfo.chordChange[i];
                 }
                 rec.ChordTotal += simInfo.totalChordChange;
-
-                swap_flag[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] = 1;
-                swap_flag[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] = 1;
             }
             local_iter++;
         }
@@ -1289,9 +1287,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 change_coordinates[i*4 + j] = -1;
             }
         }
-
-        memset(swap_flag, 0, sizeof(int)*rec.nElements);
-
     }
 
     MPI_Barrier(comm);
