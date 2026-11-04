@@ -44,7 +44,9 @@ int printOptsYTA(sYTA *yta_opts)
 
     printf("RSPM Radius: %d\n", yta_opts->RSPM_R);
     printf("Min. Energy: %1.3e\n", yta_opts->MinEnergy);
-    printf("Max. Iter: %ld\n", yta_opts->maxIter);
+    printf("Max. Iter: %1.2e\n", (double)yta_opts->maxIter);
+    printf("Root Iter: %1.3e\n", (double)yta_opts->rootIter);
+    printf("Local Inter: %1.3e\n", (double)yta_opts->localIter);
     printf("Block Size: %d\n", yta_opts->blk_size);
     printf("Struct Size: %d\n", yta_opts->structSize);
 

@@ -323,7 +323,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
     int rank, nProc;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nProc);
-    std::cout << "Hello from MPI Rank" << rank << "\n";
 
     meshInfo rec;
     meshInfo target;
@@ -366,7 +365,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
     if (rank == 0)
     {
-        all_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*4*opts->nThreads);
+        all_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*4*nProc);
         swap_flag = (int *)malloc(sizeof(int)*rec.height*rec.width);
     }
 
@@ -640,10 +639,9 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 rec.ChordTotal += simInfo.totalChordChange;
             }
 
-            if(iterCount % 10000 == 0)
+            if(iterCount % 1000000 == 0)
             {
                 rec.porosity = calc_pore2D(recData, rec.height, rec.width);
-                printf("Porosite = %1.3e\n", rec.porosity);
                 printf("Iter = %ld, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
                 fflush(stdout);
             }
@@ -664,9 +662,9 @@ int YTA_2D(options *opts, MPI_Comm comm)
         MPI_Barrier(comm);
         MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(&target.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+        MPI_Bcast(&target.ChordTotal, 1, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
         MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
@@ -971,9 +969,11 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             }
 
-            printf("Attempted swaps per core: %ld, Successful swaps: %d\n", simInfo.localIter*nProc, swap_count);
-
             iterCount += (nProc)*simInfo.localIter;
+
+            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %d, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
+
+
             MPI_Barrier(comm);
 
             // pass new struc, correlation fnctions, iterCt, Energy, and total_chord
@@ -983,23 +983,27 @@ int YTA_2D(options *opts, MPI_Comm comm)
             MPI_Barrier(comm);
             MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
             MPI_Barrier(comm);
-            MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+            MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
             MPI_Barrier(comm);
             MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
             MPI_Barrier(comm);
-            MPI_Bcast(&iterCount, 1, MPI_LONG_INT, 0, comm);
+            MPI_Bcast(&iterCount, 1, MPI_LONG, 0, comm);
             MPI_Barrier(comm);
 
             // check termination criteria
 
             if(iterCount > simInfo.maxIter)
+            {
+                printf("Exceeded max. iter. Closing...\n");
                 break;
-
+            }
             if(simInfo.Ecurrent < simInfo.MinEnergy)
+            {
+                printf("Exceeded minimum energy. Closing...\n");
                 break;
-
+            }
             // else zero correlation functions and calculate things again
-            
+
             for (int i = 0; i < simInfo.localIter; i++)
             {
                 for(int j = 0; j < 4; j++)
@@ -1063,15 +1067,15 @@ int YTA_2D(options *opts, MPI_Comm comm)
     MPI_Barrier(comm);
     MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+    MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(&target.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+    MPI_Bcast(&target.ChordTotal, 1, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
     MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
 
-    printf("Core %d, received all the data!\n", rank);
-
+    fprintf(stderr, "Core %d, received all the data!\n", rank);
+    fflush(stderr);
     for (int i = 0; i < simInfo.localIter; i++)
     {
         for(int j = 0; j < 4; j++)
@@ -1139,8 +1143,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 }
             }
 
-            printf("Local Targets picked!\n");
-
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
             memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
@@ -1152,7 +1154,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
             memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
-            printf("Memories allocated!\n");
             // make sure a = 0 before swap and b = 1;
             if(recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] == 0)
             {
@@ -1168,7 +1169,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 simInfo.a[0] = simInfo.tempCoord2[0];
                 simInfo.a[1] = simInfo.tempCoord2[1];
             }
-            printf("Local Functions!\n");
             // local costs
             localTP(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], 0);
 
@@ -1213,7 +1213,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
             {
                 simInfo.Eswap += pow((rec.C00[i] + simInfo.chordChange[i])/(rec.ChordTotal + simInfo.totalChordChange) - target.C00[i]/target.ChordTotal,2);
             }
-            printf("E's calculated!\n");
             // swap, mutate, or reverse
             if(simInfo.Eswap > simInfo.Ecurrent)
             {
@@ -1249,7 +1248,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
             }
             local_iter++;
         }
-        printf("rank = %d, Swaps = %d, E_current = %f\n", rank, swap_count, simInfo.Ecurrent);
 
         MPI_Barrier(comm);
 
@@ -1263,20 +1261,25 @@ int YTA_2D(options *opts, MPI_Comm comm)
         MPI_Barrier(comm);
         MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG_INT, 0, comm);
+        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
         MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(&iterCount, 1, MPI_LONG_INT, 0, comm);
+        MPI_Bcast(&iterCount, 1, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
 
         // check termination criteria
 
         if(iterCount > simInfo.maxIter)
+        {
+            printf("Exceeded max. iter. Closing...\n");
             break;
-
+        }
         if(simInfo.Ecurrent < simInfo.MinEnergy)
+        {
+            printf("Exceeded minimum energy. Closing...\n");
             break;
+        } 
 
         // else zero correlation functions and calculate things again
 
