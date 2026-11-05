@@ -150,7 +150,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
                 continue;
             
             // arr[i] = 0 for sure
-            for(int n = 0; n < mesh->width - col; n++)
+            for(int n = 1; n < mesh->width - col; n++)
             {
                 if(col + n + 1 == mesh->width)
                 {
@@ -178,7 +178,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
                 continue;
 
             // arr[i] = 0 for sure
-            for(int n = 0; n < mesh->height - row; n++)
+            for(int n = 1; n < mesh->height - row; n++)
             {
                 if(row + n + 1 == mesh->height)
                 {

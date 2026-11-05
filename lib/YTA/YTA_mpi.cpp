@@ -185,7 +185,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     {
         if(recData[i * rec->width + col] == 1)
             continue;
-        for(int n = 0; n < rec->height - i; n++)
+        for(int n = 1; n < rec->height - i; n++)
         {
             if(i + n + 1 == rec->height)
             {
@@ -212,7 +212,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     {
         if(recData[row * rec->width + j] == 1)
             continue;
-        for(int n = 0; n < rec->width - j; n++)
+        for(int n = 1; n < rec->width - j; n++)
         {
             if (j + n + 1 == rec->width)
             {
@@ -860,8 +860,8 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     simInfo.a[1] = simInfo.tempCoord1[1];
                     simInfo.b[0] = simInfo.tempCoord2[0];
                     simInfo.b[1] = simInfo.tempCoord2[1];
-                }else if(recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] == 0 &&
-                        recData[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] == 1)
+                }else if(recData[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] == 1 &&
+                        recData[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] == 0)
                 {
                     simInfo.a[0] = simInfo.tempCoord2[0];
                     simInfo.a[1] = simInfo.tempCoord2[1];
