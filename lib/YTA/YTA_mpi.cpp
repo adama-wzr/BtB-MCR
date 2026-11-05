@@ -187,11 +187,6 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             continue;
         for(int n = 0; n < rec->height - i; n++)
         {
-            if (n+1 > rec->largestSide)
-            {
-                printf("Error!\n");
-                break;
-            }
             if(i + n + 1 == rec->height)
             {
                 if(swapFlag == 0)
@@ -219,11 +214,6 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             continue;
         for(int n = 0; n < rec->width - j; n++)
         {
-            if (n+1 > rec->largestSide)
-            {
-                printf("Error!\n");
-                break;
-            }
             if (j + n + 1 == rec->width)
             {
                 if(swapFlag == 0)
@@ -294,11 +284,6 @@ void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col
             int distance = (int)pow((i - row), 2) + (int)pow((j - col), 2);
             if(recData[row * rec->width + col] == recData[tempRow * rec->width + tempCol])
             {
-                if(distance > opts->structSize)
-                {
-                    printf("Error! Distance out of bounds!");
-                    return;
-                }
                 if (swapFlag == 0)
                     rec->localTP_b4[distance] += 1;
                 else
@@ -824,7 +809,6 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 {
                     // successful swap
                     simInfo.swapCount++;
-                    swap_count++; // swap count in this local loop
                     // update correlations
                     simInfo.Ecurrent = simInfo.Eswap;
                     // update correlation functions
@@ -838,8 +822,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     }
                     rec.ChordTotal += simInfo.totalChordChange;
 
-                    swap_flag[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] = 1;
-                    swap_flag[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] = 1;
+                    change_coordinates[4*swap_count + 0] = simInfo.tempCoord1[0];
+                    change_coordinates[4*swap_count + 1] = simInfo.tempCoord1[1];
+                    change_coordinates[4*swap_count + 2] = simInfo.tempCoord2[0];
+                    change_coordinates[4*swap_count + 3] = simInfo.tempCoord2[1];
+
+                    swap_count++;
+
                 }
                 local_iter++;
             }
@@ -948,8 +937,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 {
                     // update correlations, tick the swap flag
                     simInfo.swapCount++;
-                    swap_count++; // swap count in this local loop
-                                  // update correlations
+                                        // update correlations
                     simInfo.Ecurrent = simInfo.Eswap;
                     // update correlation functions
                     for (int i = 0; i < simInfo.structSize; i++)
@@ -964,6 +952,8 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
                     swap_flag[simInfo.tempCoord1[0]*rec.width + simInfo.tempCoord1[1]] = 1;
                     swap_flag[simInfo.tempCoord2[0]*rec.width + simInfo.tempCoord2[1]] = 1;
+
+                    swap_count++; // swap count in this local loop
 
                 }
 
@@ -1232,8 +1222,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
             {
                 // successful swap
                 simInfo.swapCount++;
-                swap_count++; // swap count in this local loop
-                              // update correlations
+                // update correlations
                 simInfo.Ecurrent = simInfo.Eswap;
                 // update correlation functions
                 for (int i = 0; i < simInfo.structSize; i++)
@@ -1245,6 +1234,12 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     rec.C00[i] += simInfo.chordChange[i];
                 }
                 rec.ChordTotal += simInfo.totalChordChange;
+                change_coordinates[4*swap_count + 0] = simInfo.tempCoord1[0];
+                change_coordinates[4*swap_count + 1] = simInfo.tempCoord1[1];
+                change_coordinates[4*swap_count + 2] = simInfo.tempCoord2[0];
+                change_coordinates[4*swap_count + 3] = simInfo.tempCoord2[1];
+
+                swap_count++;
             }
             local_iter++;
         }
