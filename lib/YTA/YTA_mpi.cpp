@@ -180,13 +180,28 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
         affected by the point (row, col). The chord-length values are stored
         in the appropriate array according to swapFlag (0 means b4, 1 after).
     */
-
+    int newIdx;
+    bool pFlag = false;
     for(int i = 0; i < rec->height; i++)
     {
         if(recData[i * rec->width + col] == 1)
-            continue;
-        for(int n = 0; n < rec->height - i; n++)
         {
+            pFlag = true;
+            continue;
+        }
+        if(pFlag == false)
+            continue;
+        // now it's 0 for sure
+        for(int n = 0; n < rec->height; n++)
+        {
+            if(i+n >= rec->height)
+            {
+                newIdx = (i+n - rec->height)*rec->width + col;
+            }
+            else
+            {
+                newIdx = (i+n)*rec->width + col;
+            }
             if(i + n + 1 == rec->height)
             {
                 if(swapFlag == 0)
@@ -196,7 +211,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
                 break;
             }
 
-            if(recData[(i + n)*rec->width + col] == 1)
+            if(recData[newIdx] == 1)
             {
                 if(swapFlag == 0)
                     rec->localChord_b4[n + 1] += 1;
@@ -208,12 +223,29 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
         }
     }
 
+    pFlag = false;
+
     for(int j = 0; j < rec->width; j++)
     {
         if(recData[row * rec->width + j] == 1)
-            continue;
-        for(int n = 0; n < rec->width - j; n++)
         {
+            pFlag = true;
+            continue;
+        }
+        if(pFlag == false)
+            continue;
+        // now it's zero for sure
+        for(int n = 0; n < rec->width; n++)
+        {
+            if(j+n >= rec->width)
+            {
+                newIdx = row*rec->width + j + n - rec->width;
+            }
+            else
+            {
+                newIdx = row*rec->width + j + n;
+            }
+
             if (j + n + 1 == rec->width)
             {
                 if(swapFlag == 0)
@@ -223,7 +255,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
                 break;
             }
 
-            if(recData[row * rec->width + j + n] == 1)
+            if(recData[newIdx] == 1)
             {
                 if(swapFlag == 0)
                     rec->localChord_b4[n + 1] += 1;

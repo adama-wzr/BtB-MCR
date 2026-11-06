@@ -138,26 +138,44 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
         on the image. Periodic boundaries assumed, and scan only x and y
         directions (no diagonal chords).
     */
-
+    int newIdx;
+    bool pFlag;
     // x-direction
     for(int row = 0; row < mesh->height; row++)
     {
+        pFlag = false;
         for(int col = 0; col < mesh->width; col++)
         {
             int i = row * mesh->width + col;
 
             if (arr[i] == 1)
+            {
+                pFlag = true;
                 continue;
+            }
+
+            if(pFlag == false)
+            {
+                continue;
+            }
 
             // arr[i] = 0 for sure
-            for(int n = 0; n < mesh->width - col; n++)
+            for(int n = 0; n < mesh->width; n++)
             {
-                if(col + n + 1 == mesh->width)
+                if( n+col >= mesh->width)
+                {
+                    newIdx = row*mesh->width + (n+col-mesh->width);
+                }else
+                {
+                    newIdx = i + n;
+                }
+
+                if(n + 1 == mesh->width)
                 {
                     mesh->C00[n+1] += 1;
                     break;
                 }
-                if (arr[i + n] == 1)
+                if (arr[newIdx] == 1)
                 {
                     mesh->C00[n + 1] += 1;
                     col = col + n + 1;
@@ -170,23 +188,38 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
     // y-direction
     for(int col = 0; col < mesh->width; col++)
     {
+        pFlag = false;
         for(int row = 0; row < mesh->height; row++)
         {
             int i = row * mesh->width + col;
 
             if (arr[i] == 1)
+            {
+                pFlag = true;
+                continue;
+            }
+            if (pFlag == false)
                 continue;
 
             // arr[i] = 0 for sure
-            for(int n = 0; n < mesh->height - row; n++)
+            for(int n = 0; n < mesh->height; n++)
             {
+                if (row + n >= mesh->height)
+                {
+                    newIdx = (row + n - mesh->height)*mesh->width + col;
+                }
+                else
+                {
+                    newIdx = (row + n)*mesh->height + col;
+                }
+
                 if(row + n + 1 == mesh->height)
                 {
                     mesh->C00[n+1] += 1;
                     break;
                 }
 
-                if (arr[(row + n)*mesh->width + col] == 1)
+                if (arr[newIdx] == 1)
                 {
                     mesh->C00[n + 1] +=1;
                     row = row + n + 1; 
