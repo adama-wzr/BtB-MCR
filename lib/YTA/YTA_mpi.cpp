@@ -185,7 +185,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     {
         if(recData[i * rec->width + col] == 1)
             continue;
-        for(int n = 1; n < rec->height - i; n++)
+        for(int n = 0; n < rec->height - i; n++)
         {
             if(i + n + 1 == rec->height)
             {
@@ -212,7 +212,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     {
         if(recData[row * rec->width + j] == 1)
             continue;
-        for(int n = 1; n < rec->width - j; n++)
+        for(int n = 0; n < rec->width - j; n++)
         {
             if (j + n + 1 == rec->width)
             {
