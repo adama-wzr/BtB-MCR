@@ -160,7 +160,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
             }
 
             // arr[i] = 0 for sure
-            for(int n = 0; n < mesh->width; n++)
+            for(int n = 1; n < mesh->width; n++)
             {
                 if( n+col >= mesh->width)
                 {
@@ -186,7 +186,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
     }
 
     // y-direction
-    for(int col = 0; col < mesh->width; col++)
+    for(int col = 1; col < mesh->width; col++)
     {
         pFlag = false;
         for(int row = 0; row < mesh->height; row++)
@@ -202,7 +202,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
                 continue;
 
             // arr[i] = 0 for sure
-            for(int n = 0; n < mesh->height; n++)
+            for(int n = 1; n < mesh->height; n++)
             {
                 if (row + n >= mesh->height)
                 {
@@ -213,7 +213,7 @@ void CL2D(unsigned char *arr, options *opts, meshInfo *mesh)
                     newIdx = (row + n)*mesh->height + col;
                 }
 
-                if(row + n + 1 == mesh->height)
+                if(n + 1 == mesh->height)
                 {
                     mesh->C00[n+1] += 1;
                     break;

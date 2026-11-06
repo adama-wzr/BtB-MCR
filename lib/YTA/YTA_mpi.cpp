@@ -202,7 +202,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             {
                 newIdx = (i+n)*rec->width + col;
             }
-            if(i + n + 1 == rec->height)
+            if(n + 1 == rec->height)
             {
                 if(swapFlag == 0)
                     rec->localChord_b4[n+1] += 1;
@@ -246,7 +246,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
                 newIdx = row*rec->width + j + n;
             }
 
-            if (j + n + 1 == rec->width)
+            if (n + 1 == rec->width)
             {
                 if(swapFlag == 0)
                     rec->localChord_b4[n+1] += 1;
