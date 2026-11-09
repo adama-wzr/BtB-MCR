@@ -192,7 +192,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
         if(pFlag == false)
             continue;
         // now it's 0 for sure
-        for(int n = 0; n < rec->height; n++)
+        for(int n = 1; n < rec->height; n++)
         {
             if(i+n >= rec->height)
             {
@@ -205,18 +205,18 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             if(n + 1 == rec->height)
             {
                 if(swapFlag == 0)
-                    rec->localChord_b4[n+1] += 1;
+                    rec->localChord_b4[n] += 1;
                 else
-                    rec->localChord[n+1] +=1;
+                    rec->localChord[n] +=1;
                 break;
             }
 
             if(recData[newIdx] == 1)
             {
                 if(swapFlag == 0)
-                    rec->localChord_b4[n + 1] += 1;
+                    rec->localChord_b4[n] += 1;
                 else
-                    rec->localChord[n + 1] += 1;
+                    rec->localChord[n] += 1;
                 i = i + n + 1;
                 break;
             }
@@ -235,7 +235,7 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
         if(pFlag == false)
             continue;
         // now it's zero for sure
-        for(int n = 0; n < rec->width; n++)
+        for(int n = 1; n < rec->width; n++)
         {
             if(j+n >= rec->width)
             {
@@ -249,18 +249,18 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
             if (n + 1 == rec->width)
             {
                 if(swapFlag == 0)
-                    rec->localChord_b4[n+1] += 1;
+                    rec->localChord_b4[n] += 1;
                 else
-                    rec->localChord[n+1] += 1;
+                    rec->localChord[n] += 1;
                 break;
             }
 
             if(recData[newIdx] == 1)
             {
                 if(swapFlag == 0)
-                    rec->localChord_b4[n + 1] += 1;
+                    rec->localChord_b4[n] += 1;
                 else
-                    rec->localChord[n + 1] += 1;
+                    rec->localChord[n] += 1;
                 j = j + n + 1;
                 break;
             }
