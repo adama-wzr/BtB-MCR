@@ -18,7 +18,7 @@ I will also include documentation and examples as more of this code becomes publ
 
 ## Requirements
 
-Linux requires MPI, while the Windows distribution relies on OpenMP for parallel computing. Below is a general list of requirements:
+Linux requires MPI, while the Windows distribution relies on OpenMP for parallel computing (**Windows not currently supported 11/10/26**). Below is a general list of requirements:
 
 - GNU C/C++ compiler prefered.
 - C++ 17 or later
@@ -69,10 +69,10 @@ If any material here is useful to you, please consider citing one of the followi
 
 ## Upcoming Changes
 
-- (ongoing) Refactor like TPS, makes more sense for larger projects to have linked objects.
-    - Might drop Windows support for a bit
-- 2D and 3D YTA code, enabled for multi-phase reconstruction.
-- Parallel programming with MPI (UNIX exclusive, no Windows).
+- (ongoing) Refactor like TPS, makes more sense for larger projects to have linked objects. **Completed 11/10/26**
+    - Might drop Windows support for a bit **Windows not supported right now! 11/10/26**
+- 2D and 3D YTA code, enabled for multi-phase reconstruction. **YTA2D with MPI completed 11/10/26**
+- Parallel programming with MPI (UNIX exclusive, no Windows) **Added 11/10/26**.
 - Stochastic reconstruction methods will be implemented to the main execution loop.
 
 - A genConfig GUI will be added soon. I learned my lesson with larger projects, it is definitely necessary.
