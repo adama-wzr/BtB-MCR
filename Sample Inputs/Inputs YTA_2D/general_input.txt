@@ -1,0 +1,10 @@
+Example Input File:
+nD: 2
+TH: 200
+width: 500
+height: 500
+inputName: testSEM.jpg
+outputName: test.jpg
+simType: 0
+verbose: 1
+nThreads: 12

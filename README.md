@@ -23,6 +23,7 @@ Linux requires MPI, while the Windows distribution relies on OpenMP for parallel
 - GNU C/C++ compiler prefered.
 - C++ 17 or later
 - CMake 3.10 or later
+- Open MPI 5.0 or later (not tested with anything else)
 
 GPU support will come to Linux at some point in the future. There are currently no plans to support Mac users, the package focuses on HPC applications.
 
@@ -32,7 +33,7 @@ A GUI is coming in the future. There are different requirements for compiling th
 
 ## Compiling
 
-Use the CMake files for building the application.
+Use the CMake files for building the application. If you are running with MPI, please run the source file with `mpiexec` command, as that is the prefered method. 
 
 
 ## Main Capabilities
@@ -64,6 +65,7 @@ If any material here is useful to you, please consider citing one of the followi
 
 **Stochastic Reconstruction**
 - Adam, A., Fang, H., & Li, X. (2024). Effective thermal conductivity estimation using a convolutional neural network and its application in topology optimization. Energy and AI, 15, 2666–5468. https://doi.org/10.1016/j.egyai.2023.100310
+- Adam, A., Stallard, S.L., Fang, H. et al. A General Framework for Predicting Permeability in Porous Structures Using Convolutional Neural Networks with Error Estimation. Transp Porous Med 152, 100 (2025). https://doi.org/10.1007/s11242-025-02239-4
 
 ## Upcoming Changes
 
