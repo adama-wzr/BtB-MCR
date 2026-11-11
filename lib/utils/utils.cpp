@@ -423,7 +423,7 @@ int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
 int detectInterface3D(unsigned char *recData, meshInfo *rec, int slice, int row, int col){
 
 
-    unsigned char currentPhase = recData[row*rec->width + col];
+    unsigned char currentPhase = recData[slice*rec->width*rec->height + row*rec->width + col];
 
     // check other interfaces
 

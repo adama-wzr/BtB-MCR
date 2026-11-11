@@ -1647,7 +1647,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
     if (rank == 0)
     {
         all_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*6*nProc);
-        swap_flag = (int *)malloc(sizeof(int)*rec.height*rec.width);
+        swap_flag = (int *)malloc(sizeof(int)*rec.height*rec.width*rec.depth);
     }
 
     time_t t;
@@ -2155,7 +2155,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
                 local_iter++;
             }
 
-            printf("rank = %d, Swaps = %d, E_current = %f\n", rank, swap_count, simInfo.Ecurrent);
+            printf("rank = %d, Swaps = %d, E_current = %f, porosity=%1.3e\n", rank, swap_count, simInfo.Ecurrent, calc_pore3D(recData, rec.depth, rec.height, rec.width));
 
             MPI_Barrier(comm);
 
@@ -2604,9 +2604,9 @@ int YTA_3D(options *opts, MPI_Comm comm)
                 change_coordinates[6*swap_count + 0] = simInfo.tempCoord1[0];
                 change_coordinates[6*swap_count + 1] = simInfo.tempCoord1[1];
                 change_coordinates[6*swap_count + 2] = simInfo.tempCoord1[2];
-                change_coordinates[6*swap_count + 0] = simInfo.tempCoord2[0];
-                change_coordinates[6*swap_count + 1] = simInfo.tempCoord2[1];
-                change_coordinates[6*swap_count + 2] = simInfo.tempCoord2[2];
+                change_coordinates[6*swap_count + 3] = simInfo.tempCoord2[0];
+                change_coordinates[6*swap_count + 4] = simInfo.tempCoord2[1];
+                change_coordinates[6*swap_count + 5] = simInfo.tempCoord2[2];
 
                 swap_count++;
 
@@ -2650,9 +2650,9 @@ int YTA_3D(options *opts, MPI_Comm comm)
 
         for (int i = 0; i < simInfo.localIter; i++)
         {
-            for(int j = 0; j < 4; j++)
+            for(int j = 0; j < 6; j++)
             {
-                change_coordinates[i*4 + j] = -1;
+                change_coordinates[i*6 + j] = -1;
             }
         }
     }
