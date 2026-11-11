@@ -46,6 +46,35 @@ double calc_pore2D(unsigned char* arr, int height, int width)
     return porosity;
 }
 
+double calc_pore3D(unsigned char* arr, int depth, int height, int width)
+{
+    /*
+        Function calc_pore3D:
+        Inputs:
+            - pointer to structure array
+            - height value (number of pixels)
+            - width value (pixels)
+        Outputs:
+            - returns the porosity
+
+        Function calculates porosity of binary image, i.e. 0 = pore and
+        1 = particle by default.
+    */
+
+    double porosity = 0;
+    long int count = 0;
+
+    for(int i = 0; i < height*width*depth; i++)
+    {
+        if(arr[i] == 0)
+            count+=1;
+    }
+
+    porosity = (double) count/(double) (height*width*depth);
+
+    return porosity;
+}
+
 /*
 
     Correlation Functions:

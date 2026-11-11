@@ -159,6 +159,95 @@ void RSPM2D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, doub
     return;
 }
 
+
+void RSPM3D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, double targetVF)
+{
+    /*
+        Function RSPM3D:
+        Inputs: 
+            - pointer to options
+            - pointer to mesh
+            - poiter to the target array
+            - target VF
+        Output:
+            - none
+
+        Function will perform the operation for random-sphere packing
+        on the selected domain, while targeting a certain VF.
+    */
+
+    double VF = 0;
+
+    // seed random with time
+    time_t t;
+
+    srand((unsigned ) time(&t));
+
+    // main loop
+
+    while(VF < targetVF)
+    {
+        // randomly draw circle center and radius
+
+        int radius = rand() % (RSPM_R);
+        int center_i = rand() % (int)(mesh->height);
+        int center_j = rand() % (int)(mesh->width);
+        int center_k = rand() % (int)(mesh->depth);
+
+        // draw the circle
+        for(int slice = center_k - radius; slice <= center_k + radius; slice++)
+        {
+            for(int row = center_i - radius; row <= center_i + radius; row++)
+            {
+                for(int col = center_j - radius; col <= center_j + radius; col++)
+                {
+                    int tempRow = row;
+                    int tempCol = col;
+                    int tempSlice = slice;
+
+                    // check periodic boundaries
+                    if(row < 0)
+                    {
+                        tempRow = mesh->height + row;
+                    }
+                    else if(row > mesh->height - 1)
+                    {
+                        tempRow = row - mesh->height;
+                    }
+
+                    if(col < 0)
+                    {
+                        tempCol = mesh->width + col;
+                    }
+                    else if(col > mesh->width - 1)
+                    {
+                        tempCol = col - mesh->width;
+                    }
+
+                    if(slice < 0)
+                    {
+                        tempSlice = mesh->depth + slice;
+                    }
+                    else if(slice > mesh->depth - 1)
+                    {
+                        tempSlice = slice - mesh->depth;
+                    }
+
+                    if(pow(slice - center_k,2) + pow(col-center_j,2) + pow(row-center_i,2) < pow(radius,2))
+                    {
+                        target_arr[tempSlice*mesh->width*mesh->height + tempRow*mesh->width + tempCol] = 1;
+                    }
+                }
+            } // end circle
+
+            VF = 1.0 - calc_pore3D(target_arr, mesh->depth, mesh->height, mesh->width);
+        } // end while
+    }
+
+    return;
+}
+
+
 /*
 
     Read and Write Images

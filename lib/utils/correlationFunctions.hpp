@@ -12,6 +12,8 @@ void testCORF();
 
 double calc_pore2D(unsigned char* arr, int height, int width);
 
+double calc_pore3D(unsigned char* arr, int depth, int height, int width);
+
 void TP2D(unsigned char *arr,  sYTA *opts, meshInfo *mesh);
 
 void CL2D(unsigned char *arr, options *opts, meshInfo *mesh);
