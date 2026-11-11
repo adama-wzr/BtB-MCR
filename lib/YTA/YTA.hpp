@@ -36,6 +36,9 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
 
 void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag);
 
+void localChord3D(meshInfo *rec, unsigned char *recData, int slice, int row, int col, int swapFlag);
+
+void localTP3D(sYTA *opts, meshInfo *rec, unsigned char *recData, int slice, int row, int col, int swapFlag);
 
 /*
  *
