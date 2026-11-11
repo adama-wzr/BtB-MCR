@@ -420,61 +420,74 @@ int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col)
 
 
 
-int detectInterface3D(unsigned int *arr, int img_size, int i, int j, int k){
-    int N;
-    int S;
-    int E;
-    int W;
-    int B;
-    int F;
+int detectInterface3D(unsigned char *recData, meshInfo *rec, int slice, int row, int col){
 
-    int current_phase;
 
-    printf("This function needs to be re-worked! Don't use!!!!!\n");
+    unsigned char currentPhase = recData[row*rec->width + col];
 
-    if(i + 1 == img_size){
-        N = 0;
-        S = i - 1;
-    } else if(i-1 < 0){
-        N = i + 1;
-        S = img_size - 1;
-    } else{
-        N = i + 1;
-        S = i - 1;
+    // check other interfaces
+
+    int tempSlice, tempRow, tempCol;
+    int S, N, E, W, F, B;
+
+    if(col == 0)
+    {
+        E = col + 1;
+        W = rec->width - 1;
+    } else if(col == rec->width - 1)
+    {
+        W = col - 1;
+        E = 0;
+    }
+    else
+    {
+        W = col - 1;
+        E = col + 1; 
     }
 
-    if(j + 1 == img_size){
-        W = 0;
-        E = j - 1;
-    } else if(j-1 < 0){
-        W = j + 1;
-        E = img_size - 1;
-    } else{
-        W = j + 1;
-        E = j - 1;
-    }
-
-    if(k + 1 == img_size){
-        F = 0;
-        B = k - 1;
-    } else if(k-1 < 0){
-        F = k + 1;
-        B = img_size - 1;
-    } else{
-        F = k + 1;
-        B = k - 1;
-    }
-
-    current_phase = arr[i*img_size*img_size + j*img_size + k];
-
-    if(current_phase != arr[N*img_size*img_size + j*img_size + k] || current_phase != arr[S*img_size*img_size + j*img_size + k] 
-        || current_phase != arr[i*img_size*img_size + E*img_size + k] || current_phase != arr[i*img_size*img_size + W*img_size + k]
-        || current_phase != arr[i*img_size*img_size + j*img_size + B] || current_phase != arr[i*img_size*img_size + j*img_size + F]){
+    if(recData[slice * rec->width * rec->height + row * rec->width + W] != currentPhase || 
+            recData[slice * rec->width * rec->height+ row * rec->width + E] != currentPhase)
         return 0;
-    } else{
-        return 1;
+
+    if (row == 0)
+    {
+        S = row + 1;
+        N = rec->height - 1;
+    } else if (row == rec->height - 1)
+    {
+        S = 0;
+        N = row - 1;
     }
-    printf("I'm not supposed to be here?\n");
-    return 0;
+    else
+    {
+        S = row + 1;
+        N = row - 1;
+    }
+
+    if(recData[slice * rec->width * rec->height + S * rec->width + col] != currentPhase || 
+            recData[slice * rec->width * rec->height + N * rec->width + col] != currentPhase)
+        return 0;
+
+    if(slice == 0)
+    {
+        F = rec->depth - 1;
+        B = slice + 1;
+    }
+    else if(slice == rec->depth - 1)
+    {
+        F = slice - 1;
+        B = 0;
+    }
+    else
+    {
+        F = slice - 1;
+        B = slice + 1;
+    }
+
+    if(recData[F*rec->width*rec->height + row*rec->width + col] != currentPhase || 
+            recData[B*rec->width*rec->height + row*rec->width + col] != currentPhase)
+        return 0;
+
+    return 1;
 }
 

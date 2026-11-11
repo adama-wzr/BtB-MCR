@@ -46,6 +46,6 @@ int readTarget2D(options *opts, meshInfo *mesh, unsigned char **target_array);
 
 int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col);
 
-int detectInterface3D(unsigned int *arr, int img_size, int i, int j, int k);
+int detectInterface3D(unsigned char *recData, meshInfo *rec, int slice, int row, int col);
 
 #endif
