@@ -1,0 +1,9 @@
+YTA Options Example:
+blk_size: 40
+maxIter: 1e7
+minEnerg: 1e-7
+rootIter: 1e6
+localIter: 1e5
+Lambda: 0.9995
+RSPM_R: 25
+

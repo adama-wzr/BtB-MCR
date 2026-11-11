@@ -1,0 +1,11 @@
+Example Input File:
+nD: 3
+TH: 175
+width: 200
+height: 200
+depth: 200
+inputName: testSEM_small.jpg
+outputName: SEM-small_rec_1b.jpg
+simType: 0
+verbose: 1
+nThreads: 8

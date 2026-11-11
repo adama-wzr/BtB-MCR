@@ -19,9 +19,6 @@
  *
  * */
 
-int YTA_2D_Init(options *opts, meshInfo *target, meshInfo *rec, sYTA *simInfo, unsigned char *targetData, unsigned char *recData);
-
-
 void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec);
 
 
@@ -48,7 +45,7 @@ void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col
 
 #ifdef USE_MPI 
     int YTA_2D(options *opts, MPI_Comm Comm);
-
+    int YTA_3D(options *opts, MPI_Comm comm);
 #else
     int YTA_2D(options *opts);
 #endif

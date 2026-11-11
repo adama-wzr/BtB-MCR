@@ -10,25 +10,6 @@
  * */
 
 
-int YTA_2D_Init(options *opts, meshInfo *target, meshInfo *rec, sYTA *simInfo, unsigned char *targetData, unsigned char *recData)
-{
-    // binarize the target
-
-    for(int i = 0; i < target->nElements; i++)
-    {
-        if(targetData[i] < opts->TH)
-        {
-            targetData[i] = 0;
-        }else
-        {
-            targetData[i] = 1;
-        }
-    }
-
-    return 0;
-}
-
-
 void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec)
 {
     /*
@@ -1320,5 +1301,39 @@ int YTA_2D(options *opts, MPI_Comm comm)
     }
 
     MPI_Barrier(comm);
+    return 0;
+}
+
+
+
+int YTA_3D(options *opts, MPI_Comm comm)
+{
+    int rank, nProc;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nProc);
+
+    meshInfo rec;
+    meshInfo target;
+    sYTA simInfo;
+
+    if (parseInputYTA(&simInfo) == 1)
+    {
+        return 1;
+    }
+
+    if(opts->verbose && rank == 0)
+        printOptsYTA(&simInfo);
+
+    simInfo.T0 = 0;
+
+    clock_t begin = clock();
+    double t1, t2;
+    long int iterCount = 0;
+    t1 = MPI_Wtime();
+    // Allocated necessary arrays
+
+    rec.height = opts->targetHeight;
+    rec.width = opts->targetWidth;
+    rec.depth = opts->targetDepth;
     return 0;
 }
