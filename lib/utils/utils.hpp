@@ -19,6 +19,8 @@
 
 void correctVF2D(meshInfo *mesh, unsigned char *target_arr, double targetVF);
 
+void correctVF3D(meshInfo *mesh, unsigned char *target_arr, double targetVF);
+
 void randomNoise2D(meshInfo *mesh, unsigned char *target_arr, double targetVF);
 
 void RSPM2D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, double targetVF);

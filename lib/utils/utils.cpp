@@ -44,10 +44,57 @@ void correctVF2D(meshInfo *mesh, unsigned char *target_arr, double targetVF)
             }
         }
     }
-
-
     return; 
 }
+
+void correctVF3D(meshInfo *mesh, unsigned char *target_arr, double targetVF)
+{
+    /*
+        Function correctVF:
+        Inputs: 
+            - pointer to mesh
+            - poiter to the target array
+            - target VF
+        Output:
+            - none
+        
+        Function will correct the VF by adding random pixels.
+    */
+
+    double VF = 1.0 - calc_pore3D(target_arr, mesh->depth, mesh->height, mesh->width);
+
+    if (VF > targetVF)
+    {
+        while (VF > targetVF)
+        {
+            int center_i = rand() % (mesh->height);
+            int center_j = rand() % (mesh->width);
+            int center_k = rand() % (mesh->depth);
+            if(target_arr[center_k*mesh->width*mesh->height + center_i * mesh->width + center_j] == 1)
+            {
+                target_arr[center_k*mesh->width*mesh->height + center_i * mesh->width + center_j] = 0;
+                VF -= 1.0 /mesh->nElements;
+            }
+        }
+    } else if(VF < targetVF)
+    {
+        while (VF < targetVF)
+        {
+            int center_i = rand() % (mesh->height);
+            int center_j = rand() % (mesh->width);
+            int center_k = rand() % (mesh->depth);
+
+            if(target_arr[center_k*mesh->width*mesh->height + center_i * mesh->width + center_j] == 0)
+            {
+                target_arr[center_k*mesh->width*mesh->height + center_i * mesh->width + center_j] = 1;
+                VF += 1.0 /mesh->nElements;
+            }
+        }
+    }
+    return; 
+}
+
+
 
 void randomNoise2D(meshInfo *mesh, unsigned char *target_arr, double targetVF)
 {
@@ -243,7 +290,6 @@ void RSPM3D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, doub
             VF = 1.0 - calc_pore3D(target_arr, mesh->depth, mesh->height, mesh->width);
         } // end while
     }
-
     return;
 }
 

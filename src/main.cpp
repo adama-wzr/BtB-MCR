@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
     {
         if(opts.nD == 2)
             YTA_2D(&opts, MPI_COMM_WORLD);
+        else if(opts.nD == 3)
+            YTA_3D(&opts, MPI_COMM_WORLD);
     }
     else
     {
