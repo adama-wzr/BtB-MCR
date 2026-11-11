@@ -16,8 +16,11 @@ double calc_pore3D(unsigned char* arr, int depth, int height, int width);
 
 void TP2D(unsigned char *arr,  sYTA *opts, meshInfo *mesh);
 
+void TP3D(unsigned char *arr,  sYTA *opts, meshInfo *mesh);
+
 void CL2D(unsigned char *arr, options *opts, meshInfo *mesh);
 
+void CL3D(unsigned char *arr, options *opts, meshInfo *mesh);
 
 
 #endif
