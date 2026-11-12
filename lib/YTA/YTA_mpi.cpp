@@ -140,6 +140,50 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 }
 
 /*
+ *
+ *
+ *
+ * Saving utils:
+ *
+ *
+ *
+ * */
+
+void saveStack(unsigned char *recData, meshInfo *rec)
+{
+    std::string foldername = "Test_Stack";
+    // check if folder exists, if not create it
+    std::filesystem::path folder = foldername;
+    if(!std::filesystem::is_directory(folder))
+    {
+        std::filesystem::create_directory(folder);
+    }
+
+    // save each slice as an image
+
+    for (int i = 0; i < rec->depth; i++)
+    {
+        for (int j = 0; j < rec->height; j++)
+        {
+            for (int k = 0; k < rec->width; k++)
+            {
+                long int index = i*rec->height*rec->width + j*rec->width + k;
+                if(recData[index] == 1)
+                {
+                    recData[index] = 254;
+                }
+            }
+        }
+        std::string filename = "rec_" + std::to_string(i) + ".jpg";
+        std::filesystem::path full_path = folder / filename;
+        std::string path_str = full_path.string();
+        stbi_write_jpg(path_str.c_str(), (int)rec->width, (int)rec->height, 1, &recData[i*rec->width*rec->height], 100);
+    }
+
+    return;
+}
+
+/*
 
     Local Correlations
 
@@ -2365,9 +2409,6 @@ int YTA_3D(options *opts, MPI_Comm comm)
             memset(swap_flag, 0, sizeof(int)*rec.nElements);
         }
 
-
-
-
         FILE *OUT = fopen("Test.csv", "w+");
 
         fprintf(OUT, "x,y,z\n");
@@ -2385,6 +2426,9 @@ int YTA_3D(options *opts, MPI_Comm comm)
             }
         }
         fclose(OUT);
+
+        // save stack?
+        saveStack(recData, &rec);
 
         MPI_Barrier(comm);
         return 0;

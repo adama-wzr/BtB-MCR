@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <iostream>
 #include <ctime>
+#include <filesystem>
 
 
 #ifdef USE_MPI
@@ -24,6 +25,7 @@ void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec);
 
 void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec);
 
+void saveStack(unsigned char *recData, meshInfo *rec);
 
 /*
  *
