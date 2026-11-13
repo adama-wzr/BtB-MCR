@@ -2189,9 +2189,9 @@ int YTA_3D(options *opts, MPI_Comm comm)
                     change_coordinates[6*swap_count + 0] = simInfo.tempCoord1[0];
                     change_coordinates[6*swap_count + 1] = simInfo.tempCoord1[1];
                     change_coordinates[6*swap_count + 2] = simInfo.tempCoord1[2];
-                    change_coordinates[6*swap_count + 0] = simInfo.tempCoord2[0];
-                    change_coordinates[6*swap_count + 1] = simInfo.tempCoord2[1];
-                    change_coordinates[6*swap_count + 2] = simInfo.tempCoord2[2];
+                    change_coordinates[6*swap_count + 3] = simInfo.tempCoord2[0];
+                    change_coordinates[6*swap_count + 4] = simInfo.tempCoord2[1];
+                    change_coordinates[6*swap_count + 5] = simInfo.tempCoord2[2];
 
                     swap_count++;
 
