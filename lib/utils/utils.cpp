@@ -285,11 +285,11 @@ void RSPM3D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, doub
                         target_arr[tempSlice*mesh->width*mesh->height + tempRow*mesh->width + tempCol] = 1;
                     }
                 }
-            } // end circle
+            } 
+        } // end for
+        VF = 1.0 - calc_pore3D(target_arr, mesh->depth, mesh->height, mesh->width);
+    } // end while
 
-            VF = 1.0 - calc_pore3D(target_arr, mesh->depth, mesh->height, mesh->width);
-        } // end while
-    }
     return;
 }
 
