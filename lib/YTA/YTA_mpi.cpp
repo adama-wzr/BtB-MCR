@@ -78,7 +78,7 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     target->C00 = (double *)malloc(sizeof(double) * rec->largestSide);
 
-    target->TP_Total = (int *)malloc(sizeof(int) * info->structSize);
+    target->TP_Total = (long int *)malloc(sizeof(long int) * info->structSize);
 
 
     // memset target
@@ -89,7 +89,7 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     memset(target->C00, 0, sizeof(double) * rec->largestSide);
 
-    memset(target->TP_Total, 0, sizeof(int) * info->structSize);
+    memset(target->TP_Total, 0, sizeof(long int) * info->structSize);
 
     // malloc in rec
 
@@ -99,7 +99,7 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     rec->C00 = (double *)malloc(sizeof(double) * rec->largestSide);
 
-    rec->TP_Total = (int *)malloc(sizeof(int) * info->structSize);
+    rec->TP_Total = (long int *)malloc(sizeof(long int) * info->structSize);
 
     // memset in rec
 
@@ -109,27 +109,27 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     memset(rec->C00, 0, sizeof(double) * rec->largestSide);
 
-    memset(rec->TP_Total, 0, sizeof(int) * info->structSize);
+    memset(rec->TP_Total, 0, sizeof(long int) * info->structSize);
 
     // rec and info needs correlation function changes
 
-    rec->localTP    = (int *)malloc(sizeof(int) * info->structSize);
-    rec->localTP_b4 = (int *)malloc(sizeof(int) * info->structSize);
-    info->tpChange  = (int *)malloc(sizeof(int) * info->structSize);
+    rec->localTP    = (long int *)malloc(sizeof(long int) * info->structSize);
+    rec->localTP_b4 = (long int *)malloc(sizeof(long int) * info->structSize);
+    info->tpChange  = (long int *)malloc(sizeof(long int) * info->structSize);
 
-    rec->localChord     = (int *)malloc(sizeof(int) * rec->largestSide);
-    rec->localChord_b4  = (int *)malloc(sizeof(int) * rec->largestSide);
-    info->chordChange   = (int *)malloc(sizeof(int) * rec->largestSide);
+    rec->localChord     = (long int *)malloc(sizeof(long int) * rec->largestSide);
+    rec->localChord_b4  = (long int *)malloc(sizeof(long int) * rec->largestSide);
+    info->chordChange   = (long int *)malloc(sizeof(long int) * rec->largestSide);
 
     // set those to 0 as well
     
-    memset(rec->localTP,    0, sizeof(int) * info->structSize);
-    memset(rec->localTP_b4, 0, sizeof(int) * info->structSize);
-    memset(info->tpChange,  0, sizeof(int) * info->structSize);
+    memset(rec->localTP,    0, sizeof(long int) * info->structSize);
+    memset(rec->localTP_b4, 0, sizeof(long int) * info->structSize);
+    memset(info->tpChange,  0, sizeof(long int) * info->structSize);
 
-    memset(rec->localChord,     0, sizeof(int) * rec->largestSide);
-    memset(rec->localChord_b4,  0, sizeof(int) * rec->largestSide);
-    memset(info->chordChange,   0, sizeof(int) * rec->largestSide);
+    memset(rec->localChord,     0, sizeof(long int) * rec->largestSide);
+    memset(rec->localChord_b4,  0, sizeof(long int) * rec->largestSide);
+    memset(info->chordChange,   0, sizeof(long int) * rec->largestSide);
 
     // Init the total counts
     target->ChordTotal = 0;
@@ -842,13 +842,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
 
@@ -976,7 +976,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
             if(iterCount % 1000000 == 0)
             {
                 rec.porosity = calc_pore2D(recData, rec.height, rec.width);
-                printf("Iter = %ld, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
+                printf("Iter = %ld, Mut = %ld, Swap = %ld, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
                 fflush(stdout);
             }
             iterCount++;
@@ -990,9 +990,9 @@ int YTA_2D(options *opts, MPI_Comm comm)
         MPI_Barrier(comm);
         MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
         MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
@@ -1068,13 +1068,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
                 // For a fact different phases and both interfaces
                 // Set correlation changes to 0
-                memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-                memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-                memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-                memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-                memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-                memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
                 simInfo.totalChordChange = 0;
 
@@ -1182,7 +1182,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 local_iter++;
             }
 
-            printf("rank = %d, Swaps = %d, E_current = %f\n", rank, swap_count, simInfo.Ecurrent);
+            printf("rank = %d, Swaps = %ld, E_current = %f\n", rank, swap_count, simInfo.Ecurrent);
 
             MPI_Barrier(comm);
 
@@ -1221,13 +1221,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     continue;
 
                 // zero the local cost functions
-                memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-                memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-                memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-                memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-                memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-                memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
                 simInfo.totalChordChange = 0;
 
@@ -1310,7 +1310,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             iterCount += (nProc)*simInfo.localIter;
 
-            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %d, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
+            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %ld, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
 
 
             MPI_Barrier(comm);
@@ -1400,9 +1400,9 @@ int YTA_2D(options *opts, MPI_Comm comm)
     MPI_Barrier(comm);
     MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
     MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
@@ -1484,13 +1484,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
             // make sure a = 0 before swap and b = 1;
@@ -1692,6 +1692,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
     {
         all_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*6*nProc);
         swap_flag = (int *)malloc(sizeof(int)*rec.height*rec.width*rec.depth);
+        memset(swap_flag, 0, sizeof(int)*rec.height*rec.width*rec.depth);
     }
 
     time_t t;
@@ -1752,6 +1753,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
         rec.porosity = calc_pore3D(recData, rec.depth, rec.height, rec.width);
         rec.VF = 1.0 - rec.porosity;
         printf("Rec porosity = %1.3e\n", rec.porosity);
+        fflush(stdout);
         // corr. func for rec
         TP3D(recData, &simInfo, &rec);
         CL3D(recData, opts, &rec);
@@ -1782,6 +1784,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
             simInfo.Ecurrent += pow((rec.C00[i]/rec.ChordTotal - target.C00[i]/target.ChordTotal),2);
         }
         printf("Calculated Energy = %1.3e\n", simInfo.Ecurrent);
+        fflush(stdout);
         long int index1, index2;
         while(iterCount < simInfo.rootIter && simInfo.Ecurrent > simInfo.MinEnergy)
         {
@@ -1844,13 +1847,13 @@ int YTA_3D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
             // make sure a = 0 before swap and b = 1;
@@ -1979,7 +1982,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
             if(iterCount % 1000000 == 0)
             {
                 rec.porosity = calc_pore3D(recData, rec.depth, rec.height, rec.width);
-                printf("Iter = %ld, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
+                printf("Iter = %ld, Mut = %ld, Swap = %ld, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
                 fflush(stdout);
             }
             iterCount++;
@@ -1993,9 +1996,9 @@ int YTA_3D(options *opts, MPI_Comm comm)
         MPI_Barrier(comm);
         MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
         MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
@@ -2082,13 +2085,13 @@ int YTA_3D(options *opts, MPI_Comm comm)
 
                 // For a fact different phases and both interfaces
                 // Set correlation changes to 0
-                memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-                memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-                memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-                memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-                memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-                memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
                 simInfo.totalChordChange = 0;
                 // make sure a = 0 before swap and b = 1;
@@ -2199,7 +2202,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
                 local_iter++;
             }
 
-            printf("rank = %d, Swaps = %d, E_current = %f, porosity=%1.3e\n", rank, swap_count, simInfo.Ecurrent, calc_pore3D(recData, rec.depth, rec.height, rec.width));
+            printf("rank = %d, Swaps = %ld, E_current = %f, porosity=%1.3e\n", rank, swap_count, simInfo.Ecurrent, calc_pore3D(recData, rec.depth, rec.height, rec.width));
 
             MPI_Barrier(comm);
 
@@ -2245,13 +2248,13 @@ int YTA_3D(options *opts, MPI_Comm comm)
                     continue;
 
                 // Set correlation changes to 0
-                memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-                memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-                memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-                memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-                memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-                memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
                 simInfo.totalChordChange = 0;
                 // make sure a = 0 before swap and b = 1;
@@ -2358,7 +2361,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
 
             iterCount += (nProc)*simInfo.localIter;
 
-            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %d, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
+            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %ld, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
 
 
             MPI_Barrier(comm);
@@ -2446,9 +2449,9 @@ int YTA_3D(options *opts, MPI_Comm comm)
     MPI_Barrier(comm);
     MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
     MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
@@ -2541,13 +2544,13 @@ int YTA_3D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
             // make sure a = 0 before swap and b = 1;

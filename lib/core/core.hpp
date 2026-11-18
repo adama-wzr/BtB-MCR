@@ -16,13 +16,13 @@ typedef struct
     double *S00;
     double *C00;
     // Total TP
-    int *TP_Total;
+    long int *TP_Total;
     long int ChordTotal;
     // Correlation Function Changes
-    int *localTP_b4;
-    int *localTP;
-    int *localChord;
-    int *localChord_b4;
+    long int *localTP_b4;
+    long int *localTP;
+    long int *localChord;
+    long int *localChord_b4;
     // physical descriptors
     double VF;
     double porosity;
@@ -64,8 +64,8 @@ typedef struct
     double T0;
     double lambda;
     // Simulation results
-    int mutCount;
-    int swapCount;
+    long int mutCount;
+    long int swapCount;
     long int iterCount;
     // temp swap variables
     int a[3];
@@ -74,9 +74,9 @@ typedef struct
     int tempCoord2[3];
     double Ecurrent;
     double Eswap;
-    int *chordChange;
-    int *tpChange;
-    int totalChordChange;
+    long int *chordChange;
+    long int *tpChange;
+    long int totalChordChange;
 }sYTA;
 
 #endif
