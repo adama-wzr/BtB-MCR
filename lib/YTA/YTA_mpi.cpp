@@ -2412,7 +2412,7 @@ int YTA_3D(options *opts, MPI_Comm comm)
             memset(swap_flag, 0, sizeof(int)*rec.nElements);
         }
 
-        FILE *OUT = fopen("Test.csv", "w+");
+        FILE *OUT = fopen(opts->outputName, "w+");
 
         fprintf(OUT, "x,y,z\n");
 
