@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <iostream>
 #include <ctime>
+#include <filesystem>
 
 
 #ifdef USE_MPI
@@ -19,14 +20,12 @@
  *
  * */
 
-int YTA_2D_Init(options *opts, meshInfo *target, meshInfo *rec, sYTA *simInfo, unsigned char *targetData, unsigned char *recData);
-
-
 void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec);
 
 
 void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec);
 
+void saveStack(unsigned char *recData, meshInfo *rec);
 
 /*
  *
@@ -39,6 +38,9 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
 
 void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag);
 
+void localChord3D(meshInfo *rec, unsigned char *recData, int slice, int row, int col, int swapFlag);
+
+void localTP3D(sYTA *opts, meshInfo *rec, unsigned char *recData, int slice, int row, int col, int swapFlag);
 
 /*
  *
@@ -48,7 +50,7 @@ void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col
 
 #ifdef USE_MPI 
     int YTA_2D(options *opts, MPI_Comm Comm);
-
+    int YTA_3D(options *opts, MPI_Comm comm);
 #else
     int YTA_2D(options *opts);
 #endif

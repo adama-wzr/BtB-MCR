@@ -10,25 +10,6 @@
  * */
 
 
-int YTA_2D_Init(options *opts, meshInfo *target, meshInfo *rec, sYTA *simInfo, unsigned char *targetData, unsigned char *recData)
-{
-    // binarize the target
-
-    for(int i = 0; i < target->nElements; i++)
-    {
-        if(targetData[i] < opts->TH)
-        {
-            targetData[i] = 0;
-        }else
-        {
-            targetData[i] = 1;
-        }
-    }
-
-    return 0;
-}
-
-
 void YTA_baseFree2D(sYTA *info, meshInfo *target, meshInfo *rec)
 {
     /*
@@ -97,7 +78,7 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     target->C00 = (double *)malloc(sizeof(double) * rec->largestSide);
 
-    target->TP_Total = (int *)malloc(sizeof(int) * info->structSize);
+    target->TP_Total = (long int *)malloc(sizeof(long int) * info->structSize);
 
 
     // memset target
@@ -108,7 +89,7 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     memset(target->C00, 0, sizeof(double) * rec->largestSide);
 
-    memset(target->TP_Total, 0, sizeof(int) * info->structSize);
+    memset(target->TP_Total, 0, sizeof(long int) * info->structSize);
 
     // malloc in rec
 
@@ -118,7 +99,7 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     rec->C00 = (double *)malloc(sizeof(double) * rec->largestSide);
 
-    rec->TP_Total = (int *)malloc(sizeof(int) * info->structSize);
+    rec->TP_Total = (long int *)malloc(sizeof(long int) * info->structSize);
 
     // memset in rec
 
@@ -128,33 +109,77 @@ void YTA_baseAlloc2D(sYTA *info, meshInfo *target, meshInfo *rec)
 
     memset(rec->C00, 0, sizeof(double) * rec->largestSide);
 
-    memset(rec->TP_Total, 0, sizeof(int) * info->structSize);
+    memset(rec->TP_Total, 0, sizeof(long int) * info->structSize);
 
     // rec and info needs correlation function changes
 
-    rec->localTP    = (int *)malloc(sizeof(int) * info->structSize);
-    rec->localTP_b4 = (int *)malloc(sizeof(int) * info->structSize);
-    info->tpChange  = (int *)malloc(sizeof(int) * info->structSize);
+    rec->localTP    = (long int *)malloc(sizeof(long int) * info->structSize);
+    rec->localTP_b4 = (long int *)malloc(sizeof(long int) * info->structSize);
+    info->tpChange  = (long int *)malloc(sizeof(long int) * info->structSize);
 
-    rec->localChord     = (int *)malloc(sizeof(int) * rec->largestSide);
-    rec->localChord_b4  = (int *)malloc(sizeof(int) * rec->largestSide);
-    info->chordChange   = (int *)malloc(sizeof(int) * rec->largestSide);
+    rec->localChord     = (long int *)malloc(sizeof(long int) * rec->largestSide);
+    rec->localChord_b4  = (long int *)malloc(sizeof(long int) * rec->largestSide);
+    info->chordChange   = (long int *)malloc(sizeof(long int) * rec->largestSide);
 
     // set those to 0 as well
     
-    memset(rec->localTP,    0, sizeof(int) * info->structSize);
-    memset(rec->localTP_b4, 0, sizeof(int) * info->structSize);
-    memset(info->tpChange,  0, sizeof(int) * info->structSize);
+    memset(rec->localTP,    0, sizeof(long int) * info->structSize);
+    memset(rec->localTP_b4, 0, sizeof(long int) * info->structSize);
+    memset(info->tpChange,  0, sizeof(long int) * info->structSize);
 
-    memset(rec->localChord,     0, sizeof(int) * rec->largestSide);
-    memset(rec->localChord_b4,  0, sizeof(int) * rec->largestSide);
-    memset(info->chordChange,   0, sizeof(int) * rec->largestSide);
+    memset(rec->localChord,     0, sizeof(long int) * rec->largestSide);
+    memset(rec->localChord_b4,  0, sizeof(long int) * rec->largestSide);
+    memset(info->chordChange,   0, sizeof(long int) * rec->largestSide);
 
     // Init the total counts
     target->ChordTotal = 0;
     rec->ChordTotal = 0;
     info->Ecurrent = 0;
     info->Eswap = 0;
+    return;
+}
+
+/*
+ *
+ *
+ *
+ * Saving utils:
+ *
+ *
+ *
+ * */
+
+void saveStack(unsigned char *recData, meshInfo *rec)
+{
+    std::string foldername = "Test_Stack";
+    // check if folder exists, if not create it
+    std::filesystem::path folder = foldername;
+    if(!std::filesystem::is_directory(folder))
+    {
+        std::filesystem::create_directory(folder);
+    }
+
+    // save each slice as an image
+
+    for (int i = 0; i < rec->depth; i++)
+    {
+        for (int j = 0; j < rec->height; j++)
+        {
+            for (int k = 0; k < rec->width; k++)
+            {
+                long int index = i*rec->height*rec->width + j*rec->width + k;
+                if(recData[index] == 1)
+                {
+                    recData[index] = 254;
+                }
+            }
+        }
+        std::string filename = "rec_" + std::to_string(i) + ".jpg";
+        std::filesystem::path full_path = folder / filename;
+        std::string path_str = full_path.string();
+        stbi_write_jpg(path_str.c_str(), (int)rec->width, (int)rec->height, 1, &recData[i*rec->width*rec->height], 100);
+    }
+
     return;
 }
 
@@ -269,6 +294,159 @@ void localChord(meshInfo *rec, unsigned char *recData, int row, int col, int swa
     return;
 }
 
+
+void localChord3D(meshInfo *rec, unsigned char *recData, int slice, int row, int col, int swapFlag)
+{
+    /*
+        Function localChord3D
+        Inputs:
+            - pointer to mesh struct
+            - pointer to reconstruction data
+            - slice, row, and col of point of interest
+            - swapFlag
+        Outputs:
+            - None
+
+        Function will calculate the local chord-length functions that are
+        affected by the point (slice, row, col). The chord-length values are stored
+        in the appropriate array according to swapFlag (0 means b4, 1 after).
+    */
+    int newIdx;
+    bool pFlag = false;
+    for(int i = 0; i < rec->height; i++)
+    {
+        if(recData[slice * rec->width * rec->height + i * rec->width + col] == 1)
+        {
+            pFlag = true;
+            continue;
+        }
+        if(pFlag == false)
+            continue;
+        // now it's 0 for sure
+        for(int n = 1; n < rec->height; n++)
+        {
+            if(i+n >= rec->height)
+            {
+                newIdx = slice*rec->width*rec->height + (i+n - rec->height)*rec->width + col;
+            }
+            else
+            {
+                newIdx = slice*rec->width*rec->height + (i+n)*rec->width + col;
+            }
+            if(n + 1 == rec->height)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n] += 1;
+                else
+                    rec->localChord[n] +=1;
+                break;
+            }
+
+            if(recData[newIdx] == 1)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n] += 1;
+                else
+                    rec->localChord[n] += 1;
+                i = i + n + 1;
+                break;
+            }
+        }
+    }
+
+    pFlag = false;
+
+    for(int j = 0; j < rec->width; j++)
+    {
+        if(recData[slice*rec->width*rec->height + row * rec->width + j] == 1)
+        {
+            pFlag = true;
+            continue;
+        }
+        if(pFlag == false)
+            continue;
+        // now it's zero for sure
+        for(int n = 1; n < rec->width; n++)
+        {
+            if(j+n >= rec->width)
+            {
+                newIdx = slice*rec->width*rec->height + row*rec->width + j + n - rec->width;
+            }
+            else
+            {
+                newIdx = slice*rec->width*rec->height + row*rec->width + j + n;
+            }
+
+            if (n + 1 == rec->width)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n] += 1;
+                else
+                    rec->localChord[n] += 1;
+                break;
+            }
+
+            if(recData[newIdx] == 1)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n] += 1;
+                else
+                    rec->localChord[n] += 1;
+                j = j + n + 1;
+                break;
+            }
+        }
+    }
+
+    pFlag = false;
+
+    for(int k = 0; k < rec->depth; k++)
+    {
+        if(recData[k*rec->width*rec->height + row * rec->width + col] == 1)
+        {
+            pFlag = true;
+            continue;
+        }
+        if(pFlag == false)
+            continue;
+        // now it's zero for sure
+        for(int n = 1; n < rec->depth; n++)
+        {
+            if(k+n >= rec->depth)
+            {
+                newIdx = (k+n - rec->depth)*rec->width*rec->height + row*rec->width + col;
+            }
+            else
+            {
+                newIdx = (k+n)*rec->width*rec->height + row*rec->width + col;
+            }
+
+            if (n + 1 == rec->depth)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n] += 1;
+                else
+                    rec->localChord[n] += 1;
+                break;
+            }
+
+            if(recData[newIdx] == 1)
+            {
+                if(swapFlag == 0)
+                    rec->localChord_b4[n] += 1;
+                else
+                    rec->localChord[n] += 1;
+                k = k + n + 1;
+                break;
+            }
+        }
+    }
+    return;
+}
+
+
+
+
 void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col, int swapFlag)
 {
     /*
@@ -327,6 +505,144 @@ void localTP(sYTA *opts, meshInfo *rec, unsigned char *recData, int row, int col
     return;
 }
 
+
+void localTP3D(sYTA *opts, meshInfo *rec, unsigned char *recData, int slice, int row, int col, int swapFlag)
+{
+    /*
+        Function localTP3D:
+        Input:
+            - pointer to options struct
+            - pointer to mesh struct
+            - pointer to reconstruction data
+            - slice, row, and col of interest
+            - swapFlag
+        Output:
+            - none.
+        
+        Function will calculate the local two-point correlation at row and col.
+        If the flag is 0, store at rec.tp_b4, if not store at rec.local_tp
+    */
+
+    long int index = slice * rec->height * rec->width + row * rec->width + col;
+
+    // x-y plane
+    for(int i = row - opts->blk_size/2; i <= row + opts->blk_size/2; i++)
+    {
+        for(int j = col - opts->blk_size/2; j <= col + opts->blk_size/2; j++)
+        {
+            int tempCol = j;
+            int tempRow = i;
+
+            // periodic boundary in j
+            if (j < 0)
+            {
+                tempCol = rec->width + j;
+            }
+            else if (j > rec->width - 1)
+            {
+                tempCol = j - rec->width;
+            }
+
+            // periodic boundary in i
+            if (i < 0)
+            {
+                tempRow = rec->height + i;
+            }
+            else if (i > rec->height - 1)
+            {
+                tempRow = i - rec->height;
+            }
+
+            int distance = (i-row)*(i-row) + (j-col)*(j-col);
+            if(recData[index] == recData[slice*rec->width*rec->height + tempRow * rec->width + tempCol])
+            {
+                if (swapFlag == 0)
+                    rec->localTP_b4[distance] += 1;
+                else
+                    rec->localTP[distance] += 1;
+            }
+        }
+    }
+
+    // y-z plane
+    for(int i = row - opts->blk_size/2; i <= row + opts->blk_size/2; i++)
+    {
+        for(int k = slice - opts->blk_size/2; k <= slice + opts->blk_size/2; k++)
+        {
+            int tempSlice = k;
+            int tempRow = i;
+
+            // periodic boundary in k
+            if (k < 0)
+            {
+                tempSlice = rec->depth + k;
+            }
+            else if (k > rec->depth - 1)
+            {
+                tempSlice = k - rec->depth;
+            }
+
+            // periodic boundary in i
+            if (i < 0)
+            {
+                tempRow = rec->height + i;
+            }
+            else if (i > rec->height - 1)
+            {
+                tempRow = i - rec->height;
+            }
+
+            int distance = (i-row)*(i-row) + (k-slice)*(k-slice);
+            if(recData[index] == recData[tempSlice*rec->width*rec->height + tempRow * rec->width + col])
+            {
+                if (swapFlag == 0)
+                    rec->localTP_b4[distance] += 1;
+                else
+                    rec->localTP[distance] += 1;
+            }
+        }
+    }
+    // x-z plane
+    for(int k = slice - opts->blk_size/2; k <= slice + opts->blk_size/2; k++)
+    {
+        for(int j = col - opts->blk_size/2; j <= col + opts->blk_size/2; j++)
+        {
+            int tempCol = j;
+            int tempSlice = k;
+
+            // periodic boundary in j
+            if (j < 0)
+            {
+                tempCol = rec->width + j;
+            }
+            else if (j > rec->width - 1)
+            {
+                tempCol = j - rec->width;
+            }
+
+            // periodic boundary in k
+            if (k < 0)
+            {
+                tempSlice = rec->depth + k;
+            }
+            else if (k > rec->depth - 1)
+            {
+                tempSlice = k - rec->depth;
+            }
+
+            int distance = (k-slice)*(k-slice) + (j-col)*(j-col);
+            if(recData[index] == recData[tempSlice*rec->width*rec->height + row * rec->width + tempCol])
+            {
+                if (swapFlag == 0)
+                    rec->localTP_b4[distance] += 1;
+                else
+                    rec->localTP[distance] += 1;
+            }
+        }
+    }
+    return;
+}
+
 /*
  *
  *
@@ -347,6 +663,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
     if (parseInputYTA(&simInfo) == 1)
     {
+        printf("Error: couldn't read YTA input\n");
         return 1;
     }
 
@@ -525,13 +842,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
 
@@ -659,7 +976,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
             if(iterCount % 1000000 == 0)
             {
                 rec.porosity = calc_pore2D(recData, rec.height, rec.width);
-                printf("Iter = %ld, Mut = %d, Swap = %d, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
+                printf("Iter = %ld, Mut = %ld, Swap = %ld, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
                 fflush(stdout);
             }
             iterCount++;
@@ -673,9 +990,9 @@ int YTA_2D(options *opts, MPI_Comm comm)
         MPI_Barrier(comm);
         MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
-        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
         MPI_Barrier(comm);
         MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
         MPI_Barrier(comm);
@@ -751,13 +1068,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
                 // For a fact different phases and both interfaces
                 // Set correlation changes to 0
-                memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-                memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-                memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-                memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-                memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-                memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
                 simInfo.totalChordChange = 0;
 
@@ -865,7 +1182,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
                 local_iter++;
             }
 
-            printf("rank = %d, Swaps = %d, E_current = %f\n", rank, swap_count, simInfo.Ecurrent);
+            printf("rank = %d, Swaps = %ld, E_current = %f\n", rank, swap_count, simInfo.Ecurrent);
 
             MPI_Barrier(comm);
 
@@ -904,13 +1221,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
                     continue;
 
                 // zero the local cost functions
-                memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-                memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-                memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-                memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-                memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-                memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
                 simInfo.totalChordChange = 0;
 
@@ -993,7 +1310,7 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             iterCount += (nProc)*simInfo.localIter;
 
-            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %d, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
+            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %ld, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
 
 
             MPI_Barrier(comm);
@@ -1083,9 +1400,9 @@ int YTA_2D(options *opts, MPI_Comm comm)
     MPI_Barrier(comm);
     MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
-    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_INT, 0, comm);
+    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
     MPI_Barrier(comm);
     MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
     MPI_Barrier(comm);
@@ -1167,13 +1484,13 @@ int YTA_2D(options *opts, MPI_Comm comm)
 
             // For a fact different phases and both interfaces
             // Set correlation changes to 0
-            memset(rec.localTP, 0, sizeof(int)*simInfo.structSize);
-            memset(rec.localTP_b4, 0, sizeof(int)*simInfo.structSize);
-            memset(simInfo.tpChange, 0, sizeof(int)*simInfo.structSize);
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
 
-            memset(rec.localChord, 0, sizeof(int)*rec.largestSide);
-            memset(rec.localChord_b4, 0, sizeof(int)*rec.largestSide);
-            memset(simInfo.chordChange, 0, sizeof(int)*rec.largestSide);
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
 
             simInfo.totalChordChange = 0;
             // make sure a = 0 before swap and b = 1;
@@ -1315,6 +1632,1074 @@ int YTA_2D(options *opts, MPI_Comm comm)
             for(int j = 0; j < 4; j++)
             {
                 change_coordinates[i*4 + j] = -1;
+            }
+        }
+    }
+
+    MPI_Barrier(comm);
+    return 0;
+}
+
+
+
+int YTA_3D(options *opts, MPI_Comm comm)
+{
+    int rank, nProc;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nProc);
+
+    meshInfo rec;
+    meshInfo target;
+    sYTA simInfo;
+
+    if (parseInputYTA(&simInfo) == 1)
+    {
+        return 1;
+    }
+
+    if(opts->verbose && rank == 0)
+        printOptsYTA(&simInfo);
+
+    simInfo.T0 = 0;
+
+    clock_t begin = clock();
+    double t1, t2;
+    long int iterCount = 0;
+    t1 = MPI_Wtime();
+    // Allocated necessary arrays
+
+    rec.height = opts->targetHeight;
+    rec.width = opts->targetWidth;
+    rec.depth = opts->targetDepth;
+
+    rec.nElements = rec.height * rec.width * rec.depth;
+
+    rec.largestSide = (rec.height > rec.width) ? rec.height : rec.width;
+    rec.largestSide = (rec.largestSide > rec.depth) ? rec.largestSide : rec.depth;
+
+    unsigned char *recData = (unsigned char *)malloc(sizeof(unsigned char) * rec.nElements);
+    memset(recData, 0, sizeof(unsigned char) * rec.nElements);
+
+    YTA_baseAlloc2D(&simInfo, &target, &rec);       // 2D-version works fine
+
+    int *change_coordinates, *all_coordinates;
+
+    int* swap_flag;
+
+    change_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*6);
+
+    if (rank == 0)
+    {
+        all_coordinates = (int *)malloc(sizeof(int)*simInfo.localIter*6*nProc);
+        swap_flag = (int *)malloc(sizeof(int)*rec.height*rec.width*rec.depth);
+        memset(swap_flag, 0, sizeof(int)*rec.height*rec.width*rec.depth);
+    }
+
+    time_t t;
+
+    srand((unsigned ) (rank+1)*time(&t));
+
+    // root section of the code
+
+    if(rank == 0)
+    {
+        // read target
+        unsigned char *targetData;
+        if (readTarget2D(opts, &target, &targetData))
+        {
+            printf("Error, couldn't read input target\n");
+            MPI_Barrier(comm);
+            return 0;
+        }
+
+        // binarize
+        for(int i = 0; i < target.nElements; i++)
+        {
+            if(targetData[i] < opts->TH)
+            {
+                targetData[i] = 0;
+            }
+            else
+            {
+                targetData[i] = 1;
+            }
+        }
+
+        // get porosity
+
+        target.porosity = calc_pore2D(targetData, target.height, target.width);
+        target.VF = 1.0 - target.porosity;
+        target.largestSide = (target.height > target.width) ? target.height : target.width;
+
+        if(opts->verbose)
+        {
+            printf("Target Data Read. Height = %d, Width = %d, Porosity = %1.3e\n", target.height, target.width, target.porosity);
+        }
+
+        // Calculate correlation functions of the target
+        TP2D(targetData, &simInfo, &target);
+        CL2D(targetData, opts, &target);
+
+        // Pass target information to other cores
+        MPI_Bcast(target.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+        MPI_Bcast(target.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+
+        // RSPM
+        RSPM3D(simInfo.RSPM_R, &rec, recData, target.VF);
+
+        // Correct data
+        correctVF3D(&rec, recData, target.VF);
+
+        rec.porosity = calc_pore3D(recData, rec.depth, rec.height, rec.width);
+        rec.VF = 1.0 - rec.porosity;
+        printf("Rec porosity = %1.3e\n", rec.porosity);
+        fflush(stdout);
+        // corr. func for rec
+        TP3D(recData, &simInfo, &rec);
+        CL3D(recData, opts, &rec);
+
+        // get energy
+        simInfo.Ecurrent = 0.0;
+        for(int i = 0; i < simInfo.structSize; i++)
+        {
+            target.TP_Total[i] = target.S11[i] + target.S01[i] + target.S00[i];
+            rec.TP_Total[i] = rec.S11[i] + rec.S01[i] + rec.S00[i];
+            if(target.TP_Total[i] != 0)
+            {
+                simInfo.Ecurrent += pow((rec.S11[i]/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]),2);
+            }
+        }
+
+        target.ChordTotal = 0;
+        rec.ChordTotal = 0;
+
+        for(int i = 0; i < rec.largestSide; i++)
+        {
+            target.ChordTotal += target.C00[i];
+            rec.ChordTotal += rec.C00[i];
+        }
+
+        for (int i = 0; i < rec.largestSide; i++)
+        {
+            simInfo.Ecurrent += pow((rec.C00[i]/rec.ChordTotal - target.C00[i]/target.ChordTotal),2);
+        }
+        printf("Calculated Energy = %1.3e\n", simInfo.Ecurrent);
+        fflush(stdout);
+        long int index1, index2;
+        while(iterCount < simInfo.rootIter && simInfo.Ecurrent > simInfo.MinEnergy)
+        {
+            if (iterCount != 0 && simInfo.Ecurrent > simInfo.Eswap)
+                simInfo.Ecurrent = simInfo.Eswap;
+
+            // Pick coords
+            simInfo.tempCoord1[0] = rand() % (int)(rec.depth);
+            simInfo.tempCoord1[1] = rand() % (int)(rec.height);
+            simInfo.tempCoord1[2] = rand() % (int)(rec.width);
+
+            simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+            simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+            simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+
+            while(detectInterface3D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1], simInfo.tempCoord1[2]) == 1)
+            {
+                simInfo.tempCoord1[0] = rand() % (int)(rec.depth);
+                simInfo.tempCoord1[1] = rand() % (int)(rec.height);
+                simInfo.tempCoord1[2] = rand() % (int)(rec.width);
+            }
+
+            index1 = simInfo.tempCoord1[0]*rec.width*rec.height + simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[2];
+
+            while(detectInterface3D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1], simInfo.tempCoord2[2]) == 1)
+            {
+                simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+            }
+
+            index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+
+            // make sure they are different phases
+            int flag = 0;
+            if (recData[index1] == recData[index2])
+                flag = 1;
+
+            while (flag == 1)
+            {
+                if (recData[index1] == recData[index2])
+                    flag = 1;
+                else
+                    flag = 0;
+
+                if (flag == 1)
+                {
+                    simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                    simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                    simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                    while(detectInterface3D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1], simInfo.tempCoord2[2]) == 1)
+                    {
+                        simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                        simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                        simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                    }
+                    index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+                }
+            }
+
+            // For a fact different phases and both interfaces
+            // Set correlation changes to 0
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
+
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
+
+            simInfo.totalChordChange = 0;
+            // make sure a = 0 before swap and b = 1;
+            if(recData[index1] == 0)
+            {
+                simInfo.a[0] = simInfo.tempCoord1[0];
+                simInfo.a[1] = simInfo.tempCoord1[1];
+                simInfo.a[2] = simInfo.tempCoord1[2];
+                simInfo.b[0] = simInfo.tempCoord2[0];
+                simInfo.b[1] = simInfo.tempCoord2[1];
+                simInfo.b[2] = simInfo.tempCoord2[2];
+            }
+            else
+            {
+                simInfo.b[0] = simInfo.tempCoord1[0];
+                simInfo.b[1] = simInfo.tempCoord1[1];
+                simInfo.b[2] = simInfo.tempCoord1[2];
+                simInfo.a[0] = simInfo.tempCoord2[0];
+                simInfo.a[1] = simInfo.tempCoord2[1];
+                simInfo.a[2] = simInfo.tempCoord2[2];
+            }
+
+            // local costs
+            localTP3D(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+
+            localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+            localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 0);
+
+            // complete the swap
+            recData[simInfo.a[0]*rec.width*rec.height + simInfo.a[1]*rec.width + simInfo.a[2]] = 1;
+            recData[simInfo.b[0]*rec.width*rec.height + simInfo.b[1]*rec.width + simInfo.b[2]] = 0;
+
+            // evaluate local correlation again
+            localTP3D(&simInfo, &rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+            localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 1);
+            localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+            // get two-point correlation change
+            for(int i = 0; i < simInfo.structSize; i++)
+            {
+                simInfo.tpChange[i] = rec.localTP[i] - rec.localTP_b4[i];
+            }
+            // get chord-length change
+            for (int i = 0; i < rec.largestSide; i++)
+            {
+                simInfo.chordChange[i] = rec.localChord[i] - rec.localChord_b4[i];
+                simInfo.totalChordChange += rec.localChord[i] - rec.localChord_b4[i];
+            }
+
+            // calculate Eswap
+            simInfo.Eswap = 0;
+            for (int i = 0; i < simInfo.structSize; i++)
+            {
+                if(target.S11[i] != 0)
+                {
+                    simInfo.Eswap += pow(((rec.S11[i] + 2*simInfo.tpChange[i])/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]),2);
+                }
+            }
+
+            for (int i = 0; i<rec.largestSide; i++)
+            {
+                simInfo.Eswap += pow((rec.C00[i] + simInfo.chordChange[i])/(rec.ChordTotal + simInfo.totalChordChange) - target.C00[i]/target.ChordTotal,2);
+            }
+
+            // swap, mutate, or reverse
+            if(simInfo.Eswap > simInfo.Ecurrent)
+            {   // reverse or mutate
+                if(simInfo.T0 == 0)
+                {
+                    simInfo.T0 = -(simInfo.Eswap - simInfo.Ecurrent)/(simInfo.lambda*log(0.5));
+                    printf("Initial T0 = %1.3e, initial energy = %1.3e\n", simInfo.T0, simInfo.Ecurrent);
+                }
+                simInfo.Tk = simInfo.T0 * pow(simInfo.lambda, simInfo.mutCount);
+                double temp1 = (double)rand() / (double)RAND_MAX;
+
+                if(temp1 < exp(-(simInfo.Eswap - simInfo.Ecurrent)/simInfo.Tk))
+                {
+                    // mutation happens
+                    simInfo.mutCount++;
+                    simInfo.Ecurrent = simInfo.Eswap;
+                    // update correlation functions
+                    for (int i = 0; i < simInfo.structSize; i++)
+                    {
+                        rec.S11[i] += 2*simInfo.tpChange[i];
+                    }
+                    for(int i = 0; i < rec.largestSide; i++)
+                    {
+                        rec.C00[i] += simInfo.chordChange[i];
+                    }
+                    rec.ChordTotal += simInfo.totalChordChange;
+                }
+                else
+                {
+                    // no mutation, revert swap
+                    if (recData[index1] == 0)
+                    {
+                        recData[index1] = 1;
+                        recData[index2] = 0;
+                    }
+                    else
+                    {
+                        recData[index1] = 0;
+                        recData[index2] = 1;
+                    }
+                }
+            }
+            else
+            {
+                // successful swap
+                simInfo.swapCount++;
+                // update correlations
+                simInfo.Ecurrent = simInfo.Eswap;
+                // update correlation functions
+                for (int i = 0; i < simInfo.structSize; i++)
+                {
+                    rec.S11[i] += 2*simInfo.tpChange[i];
+                }
+                for(int i = 0; i < rec.largestSide; i++)
+                {
+                    rec.C00[i] += simInfo.chordChange[i];
+                }
+                rec.ChordTotal += simInfo.totalChordChange;
+            }
+
+            if(iterCount % 1000000 == 0)
+            {
+                rec.porosity = calc_pore3D(recData, rec.depth, rec.height, rec.width);
+                printf("Iter = %ld, Mut = %ld, Swap = %ld, Energy = %1.3e\n", iterCount, simInfo.mutCount, simInfo.swapCount, simInfo.Ecurrent);
+                fflush(stdout);
+            }
+            iterCount++;
+        } // end while
+
+        printf("Root done with initial loop!\n");
+
+        MPI_Barrier(comm);
+
+        MPI_Bcast(recData, rec.nElements, MPI_UNSIGNED_CHAR, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&target.ChordTotal, 1, MPI_LONG, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+
+        // communications done, set changes-coords to -1
+        for(int i = 0; i < simInfo.localIter; i++)
+        {
+            for(int j = 0; j < 6; j++)
+            {
+                change_coordinates[6*i + j] = -1;
+            }
+        }
+
+        while(true)
+        {
+            int local_iter = 0;
+            int swap_count = 0;
+
+            while(local_iter < simInfo.localIter)
+            {
+                if(local_iter != 0 && simInfo.Ecurrent > simInfo.Eswap)
+                    simInfo.Ecurrent = simInfo.Eswap;
+
+                // repeat the main init loop of the algorithm, whithout mutations this time
+                // Pick coords
+                simInfo.tempCoord1[0] = rand() % (int)(rec.depth);
+                simInfo.tempCoord1[1] = rand() % (int)(rec.height);
+                simInfo.tempCoord1[2] = rand() % (int)(rec.width);
+
+                simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+
+                while(detectInterface3D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1], simInfo.tempCoord1[2]) == 1)
+                {
+                    simInfo.tempCoord1[0] = rand() % (int)(rec.depth);
+                    simInfo.tempCoord1[1] = rand() % (int)(rec.height);
+                    simInfo.tempCoord1[2] = rand() % (int)(rec.width);
+                }
+
+                index1 = simInfo.tempCoord1[0]*rec.width*rec.height + simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[2];
+
+                while(detectInterface3D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1], simInfo.tempCoord2[2]) == 1)
+                {
+                    simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                    simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                    simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                }
+
+                index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+
+                // make sure they are different phases
+                int flag = 0;
+                if (recData[index1] == recData[index2])
+                    flag = 1;
+
+                while (flag == 1)
+                {
+                    if (recData[index1] == recData[index2])
+                        flag = 1;
+                    else
+                        flag = 0;
+
+                    if (flag == 1)
+                    {
+                        simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                        simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                        simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                        while(detectInterface3D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1], simInfo.tempCoord2[2]) == 1)
+                        {
+                            simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                            simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                            simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                        }
+                        index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+                    }
+                }
+
+                // For a fact different phases and both interfaces
+                // Set correlation changes to 0
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
+
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
+
+                simInfo.totalChordChange = 0;
+                // make sure a = 0 before swap and b = 1;
+                if(recData[index1] == 0)
+                {
+                    simInfo.a[0] = simInfo.tempCoord1[0];
+                    simInfo.a[1] = simInfo.tempCoord1[1];
+                    simInfo.a[2] = simInfo.tempCoord1[2];
+                    simInfo.b[0] = simInfo.tempCoord2[0];
+                    simInfo.b[1] = simInfo.tempCoord2[1];
+                    simInfo.b[2] = simInfo.tempCoord2[2];
+                }
+                else
+                {
+                    simInfo.b[0] = simInfo.tempCoord1[0];
+                    simInfo.b[1] = simInfo.tempCoord1[1];
+                    simInfo.b[2] = simInfo.tempCoord1[2];
+                    simInfo.a[0] = simInfo.tempCoord2[0];
+                    simInfo.a[1] = simInfo.tempCoord2[1];
+                    simInfo.a[2] = simInfo.tempCoord2[2];
+                }
+
+                // local costs
+                localTP3D(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+
+                localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+                localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 0);
+
+                // complete the swap
+                recData[simInfo.a[0]*rec.width*rec.height + simInfo.a[1]*rec.width + simInfo.a[2]] = 1;
+                recData[simInfo.b[0]*rec.width*rec.height + simInfo.b[1]*rec.width + simInfo.b[2]] = 0;
+
+                // evaluate local correlation again
+                localTP3D(&simInfo, &rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+                localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 1);
+                localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+                // get two-point correlation change
+                for(int i = 0; i < simInfo.structSize; i++)
+                {
+                    simInfo.tpChange[i] = rec.localTP[i] - rec.localTP_b4[i];
+                }
+                // get chord-length change
+                for (int i = 0; i < rec.largestSide; i++)
+                {
+                    simInfo.chordChange[i] = rec.localChord[i] - rec.localChord_b4[i];
+                    simInfo.totalChordChange += rec.localChord[i] - rec.localChord_b4[i];
+                }
+
+                // calculate Eswap
+                simInfo.Eswap = 0;
+                for (int i = 0; i < simInfo.structSize; i++)
+                {
+                    if(target.S11[i] != 0)
+                    {
+                        simInfo.Eswap += pow(((rec.S11[i] + 2*simInfo.tpChange[i])/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]),2);
+                    }
+                }
+
+                for (int i = 0; i<rec.largestSide; i++)
+                {
+                    simInfo.Eswap += pow((rec.C00[i] + simInfo.chordChange[i])/(rec.ChordTotal + simInfo.totalChordChange) - target.C00[i]/target.ChordTotal,2);
+                }
+
+                // swap, mutate, or reverse
+                if(simInfo.Eswap > simInfo.Ecurrent)
+                {
+                    // reverse, no mutations allowed
+                    if (recData[index1] == 0)
+                    {
+                        recData[index1] = 1;
+                        recData[index2] = 0;
+                    }
+                    else
+                    {
+                        recData[index1] = 0;
+                        recData[index2] = 1;
+                    }
+                }
+                else
+                {
+                    // successful swap
+                    simInfo.swapCount++;
+                    // update correlations
+                    simInfo.Ecurrent = simInfo.Eswap;
+                    // update correlation functions
+                    for (int i = 0; i < simInfo.structSize; i++)
+                    {
+                        rec.S11[i] += 2*simInfo.tpChange[i];
+                    }
+                    for(int i = 0; i < rec.largestSide; i++)
+                    {
+                        rec.C00[i] += simInfo.chordChange[i];
+                    }
+                    rec.ChordTotal += simInfo.totalChordChange;
+
+                    change_coordinates[6*swap_count + 0] = simInfo.tempCoord1[0];
+                    change_coordinates[6*swap_count + 1] = simInfo.tempCoord1[1];
+                    change_coordinates[6*swap_count + 2] = simInfo.tempCoord1[2];
+                    change_coordinates[6*swap_count + 3] = simInfo.tempCoord2[0];
+                    change_coordinates[6*swap_count + 4] = simInfo.tempCoord2[1];
+                    change_coordinates[6*swap_count + 5] = simInfo.tempCoord2[2];
+
+                    swap_count++;
+
+                }
+                local_iter++;
+            }
+
+            printf("rank = %d, Swaps = %ld, E_current = %f, porosity=%1.3e\n", rank, swap_count, simInfo.Ecurrent, calc_pore3D(recData, rec.depth, rec.height, rec.width));
+
+            MPI_Barrier(comm);
+
+            MPI_Gather(change_coordinates, simInfo.localIter*6, MPI_INT, all_coordinates, simInfo.localIter*6, MPI_INT, 0, comm);
+
+            // evaluate candidates and make changes
+            for(int i = simInfo.localIter; i < (simInfo.localIter*(nProc-1)); i++)
+            {
+                if(all_coordinates[6*i + 0] == -1)
+                    continue;
+
+                simInfo.tempCoord1[0] = all_coordinates[6*i + 0];
+                simInfo.tempCoord1[1] = all_coordinates[6*i + 1];
+                simInfo.tempCoord1[2] = all_coordinates[6*i + 2];
+                simInfo.tempCoord2[0] = all_coordinates[6*i + 3];
+                simInfo.tempCoord2[1] = all_coordinates[6*i + 4];
+                simInfo.tempCoord2[2] = all_coordinates[6*i + 5];
+
+                index1 = simInfo.tempCoord1[0]*rec.width*rec.height + simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[2];
+                index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+
+                if(swap_flag[index1] != 0 || swap_flag[index2] != 0)
+                    continue;
+
+                if(recData[index1] == 0 && recData[index2] == 1)
+                {
+                    simInfo.a[0] = simInfo.tempCoord1[0];
+                    simInfo.a[1] = simInfo.tempCoord1[1];
+                    simInfo.a[2] = simInfo.tempCoord1[2];
+                    simInfo.b[0] = simInfo.tempCoord2[0];
+                    simInfo.b[1] = simInfo.tempCoord2[1];
+                    simInfo.b[2] = simInfo.tempCoord2[2];
+                }else if(recData[index1] == 1 && recData[index2] == 0)
+                {
+                    simInfo.a[0] = simInfo.tempCoord2[0];
+                    simInfo.a[1] = simInfo.tempCoord2[1];
+                    simInfo.a[2] = simInfo.tempCoord2[2];
+                    simInfo.b[0] = simInfo.tempCoord1[0];
+                    simInfo.b[1] = simInfo.tempCoord1[1];
+                    simInfo.b[2] = simInfo.tempCoord1[2];
+                }
+                else
+                    continue;
+
+                // Set correlation changes to 0
+                memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+                memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+                memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
+
+                memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+                memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+                memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
+
+                simInfo.totalChordChange = 0;
+                // make sure a = 0 before swap and b = 1;
+                if(recData[index1] == 0)
+                {
+                    simInfo.a[0] = simInfo.tempCoord1[0];
+                    simInfo.a[1] = simInfo.tempCoord1[1];
+                    simInfo.a[2] = simInfo.tempCoord1[2];
+                    simInfo.b[0] = simInfo.tempCoord2[0];
+                    simInfo.b[1] = simInfo.tempCoord2[1];
+                    simInfo.b[2] = simInfo.tempCoord2[2];
+                }
+                else
+                {
+                    simInfo.b[0] = simInfo.tempCoord1[0];
+                    simInfo.b[1] = simInfo.tempCoord1[1];
+                    simInfo.b[2] = simInfo.tempCoord1[2];
+                    simInfo.a[0] = simInfo.tempCoord2[0];
+                    simInfo.a[1] = simInfo.tempCoord2[1];
+                    simInfo.a[2] = simInfo.tempCoord2[2];
+                }
+
+                // local costs
+                localTP3D(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+
+                localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+                localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 0);
+
+                // complete the swap
+                recData[simInfo.a[0]*rec.width*rec.height + simInfo.a[1]*rec.width + simInfo.a[2]] = 1;
+                recData[simInfo.b[0]*rec.width*rec.height + simInfo.b[1]*rec.width + simInfo.b[2]] = 0;
+
+                // evaluate local correlation again
+                localTP3D(&simInfo, &rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+                localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 1);
+                localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+                // get two-point correlation change
+                for(int i = 0; i < simInfo.structSize; i++)
+                {
+                    simInfo.tpChange[i] = rec.localTP[i] - rec.localTP_b4[i];
+                }
+                // get chord-length change
+                for (int i = 0; i < rec.largestSide; i++)
+                {
+                    simInfo.chordChange[i] = rec.localChord[i] - rec.localChord_b4[i];
+                    simInfo.totalChordChange += rec.localChord[i] - rec.localChord_b4[i];
+                }
+
+                // calculate Eswap
+                simInfo.Eswap = 0;
+                for (int i = 0; i < simInfo.structSize; i++)
+                {
+                    if(target.S11[i] != 0)
+                    {
+                        simInfo.Eswap += pow(((rec.S11[i] + 2*simInfo.tpChange[i])/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]),2);
+                    }
+                }
+
+                for (int i = 0; i<rec.largestSide; i++)
+                {
+                    simInfo.Eswap += pow((rec.C00[i] + simInfo.chordChange[i])/(rec.ChordTotal + simInfo.totalChordChange) - target.C00[i]/target.ChordTotal,2);
+                }
+
+                // swap or reverse
+                if(simInfo.Eswap > simInfo.Ecurrent)
+                {
+                    // reverse, no mutations allowed
+                    if (recData[index1] == 0)
+                    {
+                        recData[index1] = 1;
+                        recData[index2] = 0;
+                    }
+                    else
+                    {
+                        recData[index1] = 0;
+                        recData[index2] = 1;
+                    }
+                }
+                else
+                {
+                    // successful swap
+                    simInfo.swapCount++;
+                    // update correlations
+                    simInfo.Ecurrent = simInfo.Eswap;
+                    // update correlation functions
+                    for (int i = 0; i < simInfo.structSize; i++)
+                    {
+                        rec.S11[i] += 2*simInfo.tpChange[i];
+                    }
+                    for(int i = 0; i < rec.largestSide; i++)
+                    {
+                        rec.C00[i] += simInfo.chordChange[i];
+                    }
+                    rec.ChordTotal += simInfo.totalChordChange;
+                    swap_flag[index1] = 1;
+                    swap_flag[index2] = 1;
+                    swap_count++;
+
+                }
+                local_iter++;
+            }
+
+            iterCount += (nProc)*simInfo.localIter;
+
+            printf("Attempted swaps per core: %ld, Total Iter = %ld, Successful swaps: %ld, Energy = %1.3e\n", simInfo.localIter, iterCount, swap_count, simInfo.Ecurrent);
+
+
+            MPI_Barrier(comm);
+
+            // pass new struc, correlation fnctions, iterCt, Energy, and total_chord
+            MPI_Bcast(recData, rec.nElements, MPI_UNSIGNED_CHAR, 0, comm);
+            MPI_Barrier(comm);
+            MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+            MPI_Barrier(comm);
+            MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+            MPI_Barrier(comm);
+            MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
+            MPI_Barrier(comm);
+            MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
+            MPI_Barrier(comm);
+            MPI_Bcast(&iterCount, 1, MPI_LONG, 0, comm);
+            MPI_Barrier(comm);
+
+            // check termination criteria
+
+            if(iterCount > simInfo.maxIter)
+            {
+                printf("Exceeded max. iter. Closing...\n");
+                break;
+            }
+            if(simInfo.Ecurrent < simInfo.MinEnergy)
+            {
+                printf("Exceeded minimum energy. Closing...\n");
+                break;
+            }
+            // else zero correlation functions and calculate things again
+
+            for (int i = 0; i < simInfo.localIter; i++)
+            {
+                for(int j = 0; j < 6; j++)
+                {
+                    change_coordinates[i*6 + j] = -1;
+                }
+                for(int proc = 0; proc < nProc; proc++)
+                {
+                    for(int j = 0; j < 6; j++)
+                    {
+                        all_coordinates[i*6 + proc*simInfo.localIter + j] = -1;
+                    }
+                }
+            }
+
+            memset(swap_flag, 0, sizeof(int)*rec.nElements);
+        }
+
+        FILE *OUT = fopen(opts->outputName, "w+");
+
+        fprintf(OUT, "x,y,z\n");
+
+        for(int slice = 0; slice < rec.depth; slice++)
+        {
+            for(int row = 0; row < rec.height; row++)
+            {
+                for(int col = 0; col < rec.width; col++)
+                {
+                    long int index = slice * rec.height * rec.width + row * rec.width + col;
+                    if(recData[index] == 1)
+                        fprintf(OUT, "%d,%d,%d\n", col, row, slice);
+                }
+            }
+        }
+        fclose(OUT);
+
+        // save stack?
+        saveStack(recData, &rec);
+
+        MPI_Barrier(comm);
+        return 0;
+    }
+
+    // workers section of the code
+
+    // Get relevant target correlation functions
+    MPI_Bcast(target.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+    MPI_Bcast(target.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+
+    MPI_Barrier(comm);
+
+    MPI_Bcast(recData, rec.nElements, MPI_UNSIGNED_CHAR, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(rec.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(target.TP_Total, simInfo.structSize, MPI_LONG, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(&target.ChordTotal, 1, MPI_LONG, 0, comm);
+    MPI_Barrier(comm);
+    MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
+    MPI_Barrier(comm);
+
+    fprintf(stderr, "Core %d, received all the data!\n", rank);
+    fflush(stderr);
+    for (int i = 0; i < simInfo.localIter; i++)
+    {
+        for(int j = 0; j < 6; j++)
+        {
+            change_coordinates[i*6 + j] = -1;
+        }
+    }
+    printf("Starting Main Loop! Rank: %d\n", rank);
+    simInfo.Eswap = 1.0;
+    long int index1, index2;
+    // worker infinite loop
+    while(true)
+    {
+        if(iterCount > simInfo.maxIter)
+            break;
+
+        int local_iter = 0;
+        int swap_count = 0;
+
+        while(local_iter < simInfo.localIter)
+        {
+            if(local_iter != 0 && simInfo.Ecurrent > simInfo.Eswap)
+                simInfo.Ecurrent = simInfo.Eswap;
+            // repeat the main init loop of the algorithm, whithout mutations this time
+            // Pick coords
+            simInfo.tempCoord1[0] = rand() % (int)(rec.depth);
+            simInfo.tempCoord1[1] = rand() % (int)(rec.height);
+            simInfo.tempCoord1[2] = rand() % (int)(rec.width);
+
+            simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+            simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+            simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+
+            while(detectInterface3D(recData, &rec, simInfo.tempCoord1[0], simInfo.tempCoord1[1], simInfo.tempCoord1[2]) == 1)
+            {
+                simInfo.tempCoord1[0] = rand() % (int)(rec.depth);
+                simInfo.tempCoord1[1] = rand() % (int)(rec.height);
+                simInfo.tempCoord1[2] = rand() % (int)(rec.width);
+            }
+
+            index1 = simInfo.tempCoord1[0]*rec.width*rec.height + simInfo.tempCoord1[1]*rec.width + simInfo.tempCoord1[2];
+
+            while(detectInterface3D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1], simInfo.tempCoord2[2]) == 1)
+            {
+                simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+            }
+
+            index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+
+            // make sure they are different phases
+            int flag = 0;
+            if (recData[index1] == recData[index2])
+                flag = 1;
+
+            while (flag == 1)
+            {
+                if (recData[index1] == recData[index2])
+                    flag = 1;
+                else
+                    flag = 0;
+
+                if (flag == 1)
+                {
+                    simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                    simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                    simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                    while(detectInterface3D(recData, &rec, simInfo.tempCoord2[0], simInfo.tempCoord2[1], simInfo.tempCoord2[2]) == 1)
+                    {
+                        simInfo.tempCoord2[0] = rand() % (int)(rec.depth);
+                        simInfo.tempCoord2[1] = rand() % (int)(rec.height);
+                        simInfo.tempCoord2[2] = rand() % (int)(rec.width);
+                    }
+                    index2 = simInfo.tempCoord2[0]*rec.width*rec.height + simInfo.tempCoord2[1]*rec.width + simInfo.tempCoord2[2];
+                }
+            }
+
+            // For a fact different phases and both interfaces
+            // Set correlation changes to 0
+            memset(rec.localTP, 0, sizeof(long int)*simInfo.structSize);
+            memset(rec.localTP_b4, 0, sizeof(long int)*simInfo.structSize);
+            memset(simInfo.tpChange, 0, sizeof(long int)*simInfo.structSize);
+
+            memset(rec.localChord, 0, sizeof(long int)*rec.largestSide);
+            memset(rec.localChord_b4, 0, sizeof(long int)*rec.largestSide);
+            memset(simInfo.chordChange, 0, sizeof(long int)*rec.largestSide);
+
+            simInfo.totalChordChange = 0;
+            // make sure a = 0 before swap and b = 1;
+            if(recData[index1] == 0)
+            {
+                simInfo.a[0] = simInfo.tempCoord1[0];
+                simInfo.a[1] = simInfo.tempCoord1[1];
+                simInfo.a[2] = simInfo.tempCoord1[2];
+                simInfo.b[0] = simInfo.tempCoord2[0];
+                simInfo.b[1] = simInfo.tempCoord2[1];
+                simInfo.b[2] = simInfo.tempCoord2[2];
+            }
+            else
+            {
+                simInfo.b[0] = simInfo.tempCoord1[0];
+                simInfo.b[1] = simInfo.tempCoord1[1];
+                simInfo.b[2] = simInfo.tempCoord1[2];
+                simInfo.a[0] = simInfo.tempCoord2[0];
+                simInfo.a[1] = simInfo.tempCoord2[1];
+                simInfo.a[2] = simInfo.tempCoord2[2];
+            }
+
+            // local costs
+            localTP3D(&simInfo, &rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+
+            localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 0);
+            localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 0);
+
+            // complete the swap
+            recData[simInfo.a[0]*rec.width*rec.height + simInfo.a[1]*rec.width + simInfo.a[2]] = 1;
+            recData[simInfo.b[0]*rec.width*rec.height + simInfo.b[1]*rec.width + simInfo.b[2]] = 0;
+
+            // evaluate local correlation again
+            localTP3D(&simInfo, &rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+            localChord3D(&rec, recData, simInfo.b[0], simInfo.b[1], simInfo.b[2], 1);
+            localChord3D(&rec, recData, simInfo.a[0], simInfo.a[1], simInfo.a[2], 1);
+
+            // get two-point correlation change
+            for(int i = 0; i < simInfo.structSize; i++)
+            {
+                simInfo.tpChange[i] = rec.localTP[i] - rec.localTP_b4[i];
+            }
+            // get chord-length change
+            for (int i = 0; i < rec.largestSide; i++)
+            {
+                simInfo.chordChange[i] = rec.localChord[i] - rec.localChord_b4[i];
+                simInfo.totalChordChange += rec.localChord[i] - rec.localChord_b4[i];
+            }
+
+            // calculate Eswap
+            simInfo.Eswap = 0;
+            for (int i = 0; i < simInfo.structSize; i++)
+            {
+                if(target.S11[i] != 0)
+                {
+                    simInfo.Eswap += pow(((rec.S11[i] + 2*simInfo.tpChange[i])/rec.TP_Total[i] - target.S11[i]/target.TP_Total[i]),2);
+                }
+            }
+
+            for (int i = 0; i<rec.largestSide; i++)
+            {
+                simInfo.Eswap += pow((rec.C00[i] + simInfo.chordChange[i])/(rec.ChordTotal + simInfo.totalChordChange) - target.C00[i]/target.ChordTotal,2);
+            }
+
+            // swap, mutate, or reverse
+            if(simInfo.Eswap > simInfo.Ecurrent)
+            {
+                // reverse, no mutations allowed
+                if (recData[index1] == 0)
+                {
+                    recData[index1] = 1;
+                    recData[index2] = 0;
+                }
+                else
+                {
+                    recData[index1] = 0;
+                    recData[index2] = 1;
+                }
+            }
+            else
+            {
+                // successful swap
+                simInfo.swapCount++;
+                // update correlations
+                simInfo.Ecurrent = simInfo.Eswap;
+                // update correlation functions
+                for (int i = 0; i < simInfo.structSize; i++)
+                {
+                    rec.S11[i] += 2*simInfo.tpChange[i];
+                }
+                for(int i = 0; i < rec.largestSide; i++)
+                {
+                    rec.C00[i] += simInfo.chordChange[i];
+                }
+                rec.ChordTotal += simInfo.totalChordChange;
+
+                change_coordinates[6*swap_count + 0] = simInfo.tempCoord1[0];
+                change_coordinates[6*swap_count + 1] = simInfo.tempCoord1[1];
+                change_coordinates[6*swap_count + 2] = simInfo.tempCoord1[2];
+                change_coordinates[6*swap_count + 3] = simInfo.tempCoord2[0];
+                change_coordinates[6*swap_count + 4] = simInfo.tempCoord2[1];
+                change_coordinates[6*swap_count + 5] = simInfo.tempCoord2[2];
+
+                swap_count++;
+
+            }
+            local_iter++;
+        }
+
+        MPI_Barrier(comm);
+
+        MPI_Gather(change_coordinates, simInfo.localIter*6, MPI_INT, all_coordinates, simInfo.localIter*6, MPI_INT, 0, comm);
+        MPI_Barrier(comm);
+
+        // pass new struc, correlation fnctions, iterCt, Energy, and total_chord
+        MPI_Bcast(recData, rec.nElements, MPI_UNSIGNED_CHAR, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.S11, simInfo.structSize, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(rec.C00, rec.largestSide, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&rec.ChordTotal, 1, MPI_LONG, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&simInfo.Ecurrent, 1, MPI_DOUBLE, 0, comm);
+        MPI_Barrier(comm);
+        MPI_Bcast(&iterCount, 1, MPI_LONG, 0, comm);
+        MPI_Barrier(comm);
+
+        // check termination criteria
+
+        if(iterCount > simInfo.maxIter)
+        {
+            printf("Exceeded max. iter. Closing...\n");
+            break;
+        }
+        if(simInfo.Ecurrent < simInfo.MinEnergy)
+        {
+            printf("Exceeded minimum energy. Closing...\n");
+            break;
+        } 
+
+        // else zero correlation functions and calculate things again
+
+        for (int i = 0; i < simInfo.localIter; i++)
+        {
+            for(int j = 0; j < 6; j++)
+            {
+                change_coordinates[i*6 + j] = -1;
             }
         }
     }

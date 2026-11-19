@@ -19,9 +19,15 @@
 
 void correctVF2D(meshInfo *mesh, unsigned char *target_arr, double targetVF);
 
+void correctVF3D(meshInfo *mesh, unsigned char *target_arr, double targetVF);
+
 void randomNoise2D(meshInfo *mesh, unsigned char *target_arr, double targetVF);
 
 void RSPM2D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, double targetVF);
+
+void RSPM3D(unsigned int RSPM_R, meshInfo *mesh, unsigned char *target_arr, double targetVF);
+
+
 /*
 
     Read and Write Images
@@ -40,6 +46,6 @@ int readTarget2D(options *opts, meshInfo *mesh, unsigned char **target_array);
 
 int detectInterface2D(unsigned char *recData, meshInfo *rec, int row, int col);
 
-int detectInterface3D(unsigned int *arr, int img_size, int i, int j, int k);
+int detectInterface3D(unsigned char *recData, meshInfo *rec, int slice, int row, int col);
 
 #endif
