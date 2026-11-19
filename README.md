@@ -2,7 +2,7 @@
 
 BtB-MCR is a repository dedicated to fast digital material reconstruction techniques. The repository will serve as a collection of already existing algorithms for digital microstructure reconstruction (MCR) while also serving as testing ground for novel implementations and novel algorithms, with the mission of increased robustness and faster computational speeds.
 
-I will also include documentation and examples as more of this code becomes public. Everything that is currently included in this package has been peer-reviewed and published already. Novel material will be indicated.
+I understand that the code is crude and documentation is lacking, but this is because we are in an early development stage. If you want to use any of this code, please reach out to one of the authors and ask for help. Everything that is currently included in this package has been peer-reviewed and published already. Novel material will be indicated.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ I will also include documentation and examples as more of this code becomes publ
 
 Linux requires MPI, while the Windows distribution relies on OpenMP for parallel computing (**Windows not currently supported 11/10/26**). Below is a general list of requirements:
 
-- GNU C/C++ compiler prefered.
+- GNU C/C++ compiler preferred.
 - C++ 17 or later
 - CMake 3.10 or later
 - Open MPI 5.0 or later (not tested with anything else)
@@ -33,7 +33,7 @@ A GUI is coming in the future. There are different requirements for compiling th
 
 ## Compiling
 
-Use the CMake files for building the application. If you are running with MPI, please run the source file with `mpiexec` command, as that is the prefered method. 
+Use the CMake files for building the application. If you are running with MPI, please run the source file with `mpiexec` command, as that is the preferred method. 
 
 
 ## Main Capabilities
@@ -71,12 +71,13 @@ If any material here is useful to you, please consider citing one of the followi
 
 - (ongoing) Refactor like TPS, makes more sense for larger projects to have linked objects. **Completed 11/10/26**
     - Might drop Windows support for a bit **Windows not supported right now! 11/10/26**
-- 2D and 3D YTA code, enabled for multi-phase reconstruction. **YTA2D with MPI completed 11/10/26**
+- 2D and 3D YTA code, enabled for multi-phase reconstruction. **YTA2D with MPI completed 11/10/26, 3D completed 11/19/26**
 - Parallel programming with MPI (UNIX exclusive, no Windows) **Added 11/10/26**.
 - Stochastic reconstruction methods will be implemented to the main execution loop.
+- Some additional refactoring is needed to add periodic boundaries as optional, increased robustness for output format, debugging/plotting model, collecting better running statistics, intermittent save files, continuing reconstructions without restarting, LUTs for models, more correlation functions, and much better code compartmentalization.
 
-- A genConfig GUI will be added soon. I learned my lesson with larger projects, it is definitely necessary.
+- A genConfig GUI will be added at some point. I learned my lesson with larger projects, it is definitely necessary.
 
 ## Acknowledgements
 
-This package is not sponsored or supported by any grants. The original methods were developed as part of other publications, and the publications have their acknowledgements.
+This package is not sponsored or supported by any grants, I develop it on my own time. The original methods were developed as part of other publications, and the publications have their acknowledgements.
